@@ -28,6 +28,11 @@ fout1.close()
 fout2 = open("fail.txt",'w')
 fout2.close()
 
+# Install dependencies of some missing packages
+print("Installing ggforce (dependency)...\n")
+print("Rscript -e \"install.packages('ggforce')\"")
+os.system("Rscript -e \"install.packages('ggforce')\"")
+
 # Install missing packages
 git_pkgs = {
 	"SeuratData":"satijalab/seurat-data",
