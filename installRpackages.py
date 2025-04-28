@@ -29,10 +29,24 @@ fout2 = open("fail.txt",'w')
 fout2.close()
 
 # Install missing packages
+git_pkgs = {
+	"SeuratData":"satijalab/seurat-data",
+	"SeuratDisk":"mojaveazure/seurat-disk",
+	"SeuratWrappers":"satijalab/seurat-wrappers",
+	"CellChat":"jinworks/CellChat",
+	"monocle3":"cole-trapnell-lab/monocle3",
+	"presto":"immunogenomics/presto",
+	"proteoDA":"ByrumLab/proteoDA",
+	"rbokeh":"hafen/rbokeh",
+	"SCENIC":"aertslab/SCENIC",
+	"SCopeLoomR":"aertslab/SCopeLoomR",
+	"velocyto.R":"velocyto-team/velocyto.R"
+	}
+
 fin = open("diff.txt","r")
 for line in fin:
 	line = line.replace("\n","").replace("> ","")
-	if line.startswith("<") or line[0].isdigit():
+	if line.startswith("<") or line[0].isdigit() or line in git_pkgs.keys():
 		continue
 
 	fout1 = open("sucess.txt","r")
@@ -49,7 +63,7 @@ for line in fin:
 	print("Rscript -e \"install.packages('"+line+"')\"")
 	os.system("Rscript -e \"install.packages('"+line+"')\"")
 
-	if os.path.isdir("/hpc/apps/R/4.5.0/lib64/R/library/"+line+"/"):
+	if os.path.isdir("/hpc/apps/R/"+v_new+"/lib64/R/library/"+line+"/"):
 		print("\nsucess\n")
 		fout1 = open("sucess.txt","a")
 		_ = fout1.write(line+"\n")
@@ -60,7 +74,7 @@ for line in fin:
 		print("Rscript -e \"BiocManager::install(c('"+line+"'))\"")
 		os.system("Rscript -e \"BiocManager::install(c('"+line+"'))\"")
 		
-		if os.path.isdir("/hpc/apps/R/4.5.0/lib64/R/library/"+line+"/"):
+		if os.path.isdir("/hpc/apps/R/"+v_new+"/lib64/R/library/"+line+"/"):
 			print("\nsucess\n")
 			fout1 = open("sucess.txt","a")
 			_ = fout1.write(line+"\n")
@@ -71,3 +85,21 @@ for line in fin:
 			_ = fout2.write(line+"\n")
 			fout2.close()
 fin.close()
+
+# Install Git packages
+for pkg,repo in git_pkgs.items():
+	print("\nInstalling "+pkg+"...")
+	print("Rscript -e \"devtools::install_github('"+repo+"')\"")
+	os.system("Rscript -e \"devtools::install_github('"+repo+"')\"")
+
+	if os.path.isdir("/hpc/apps/R/"+v_new+"/lib64/R/library/"+line+"/"):
+		print("\nsucess\n")
+		fout1 = open("sucess.txt","a")
+		_ = fout1.write(line+"\n")
+		fout1.close()
+	else:
+		print("\nfailure\n")
+		fout2 = open("fail.txt","a")
+		_ = fout2.write(line+"\n")
+		fout2.close()
+	
