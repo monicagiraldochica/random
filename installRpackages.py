@@ -29,9 +29,19 @@ fout2 = open("fail.txt",'w')
 fout2.close()
 
 # Install dependencies of some missing packages
-print("Installing ggforce (dependency)...\n")
-print("Rscript -e \"install.packages('ggforce')\"")
-os.system("Rscript -e \"install.packages('ggforce')\"")
+dependencies = ["ggforce", "terra", "pak", "remotes"]
+for dep in dependencies:
+    print("Installing "+dep+" (dependency)...\n")
+    print("Rscript -e \"install.packages('"+dep+"')\"")
+    os.system("Rscript -e \"install.packages('"+dep+"')\"")
+
+if not os.path.exists("/adminfs/builds/R-4.5.0/packages"):
+    os.mkdir("/adminfs/builds/R-4.5.0/packages")
+os.chdir("/adminfs/builds/R-4.5.0/packages")
+# THIS LINK WILL NEED TO BE MODIFIED FOR NEW VERSIONS!
+os.system("wget https://cran.r-project.org/src/contrib/Archive/multicross/multicross_2.1.0.tar.gz")
+os.system("R CMD INSTALL multicross_2.1.0.tar.gz")
+os.chdir("/scratch/g/rccadmin/mkeith/R")
 
 # Install missing packages
 git_pkgs = {
@@ -45,13 +55,14 @@ git_pkgs = {
 	"rbokeh":"hafen/rbokeh",
 	"SCENIC":"aertslab/SCENIC",
 	"SCopeLoomR":"aertslab/SCopeLoomR",
-	"velocyto.R":"velocyto-team/velocyto.R"
+	"velocyto.R":"velocyto-team/velocyto.R",
+        "SCPA":"jackbibby1/SCPA"
 	}
 
 fin = open("diff.txt","r")
 for line in fin:
 	line = line.replace("\n","").replace("> ","")
-	if line.startswith("<") or line[0].isdigit() or line in git_pkgs.keys():
+	if line.startswith("<") or line[0].isdigit() or line in git_pkgs.keys() or "Giotto" in line:
 		continue
 
 	fout1 = open("sucess.txt","r")
@@ -108,3 +119,6 @@ for pkg,repo in git_pkgs.items():
 		_ = fout2.write(line+"\n")
 		fout2.close()
 	
+# Install Giotto packages
+print("Rscript -e \"pak::pkg_install('drieslab/Giotto')\"")
+os.system("Rscript -e \"pak::pkg_install('drieslab/Giotto')\"")
