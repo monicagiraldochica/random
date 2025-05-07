@@ -36,6 +36,17 @@ def runShell():
 	output = stream.read()
 	output
 
+def getStdOut(command):
+        try:
+                result = subprocess.run(command, capture_output=True, text=True, check=True)
+                return [result.stdout,result.stderr]
+
+        except subprocess.CalledProcessError as e:
+                 print(f"Error executing command: {e}")
+                 return ["",""]
+
+print(getStdOut(["id", "mkeith"]))
+
 def concatstrings():
     x="hola"
     y="monica"
