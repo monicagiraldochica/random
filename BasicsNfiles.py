@@ -39,6 +39,14 @@ def runShell():
 def getStdOut(command):
         try:
                 result = subprocess.run(command, capture_output=True, text=True, check=True)
+                return [result.stdout.replace("\n",""),result.stderr.replace("\n","")]
+
+        except subprocess.CalledProcessError as e:
+                 return ["",""]
+
+def getStdOut(command):
+        try:
+                result = subprocess.run(command, capture_output=True, text=True, check=True)
                 return [result.stdout,result.stderr]
 
         except subprocess.CalledProcessError as e:
