@@ -2,29 +2,6 @@ import externalFunction1
 import os
 #from os import path
 
-def funcnumbers():
-    a=10
-    b=3
-    x=a/b
-    y=10%3 #reminder
-    z=10**3 #exponent
-    c=((a+b)*(a-b))/2
-    print(c)
-    d=float(((a+b)*(a-b))/float(2)) #int(),str()
-    print(d)
-    #print(x)
-    #print(y)
-    #print(z)
-    #print(a>=b)
-    b+=1
-    #print(b)
-    b*=2
-    #print(b)
-    b/=2
-    #print(b)
-    b**=2
-    #print(b)
-
 def functboolean():
     print("a"=="b" and "a"!="b")
     print("a"=="b" or "a"!="b")
@@ -58,6 +35,17 @@ def runShell():
 	stream = os.popen('echo returned output')
 	output = stream.read()
 	output
+
+def getStdOut(command):
+        try:
+                result = subprocess.run(command, capture_output=True, text=True, check=True)
+                return [result.stdout,result.stderr]
+
+        except subprocess.CalledProcessError as e:
+                 print(f"Error executing command: {e}")
+                 return ["",""]
+
+print(getStdOut(["id", "mkeith"]))
 
 def concatstrings():
     x="hola"
