@@ -251,28 +251,6 @@ def funcexceptions():
         print("there was an exception")
     print("continue code")
 
-def fununknownargs(*args):
-    for item in args:
-        print(item)
-
-def fununknownargs2(name,*args):
-    for item in args:
-        print(name+": "+str(item))
-
-def print_kwargs(**kwargs):
-    print(kwargs)
-    for key,value in kwargs.items():
-        print(key)
-        print(value)
-        print(str(key)+": "+str(value))
-        print("The value of {} is {}".format(key, value))
-        print("%s %s" %(key,value))
-
-# GET NUMBER OF ARGUMENTS AND FIRST ARGUMENT
-#if len(sys.argv)!=2:
-#	sys.exit("Wrong number of arguments")
-#subject=sys.argv[1]
-
 def funclasses():
     s1=person("monica",33)
     print(s1.age)
@@ -363,7 +341,6 @@ class student(person):
         super(student,self).somefunc()
         print("some extra print")
 
-#print_kwargs(kwargs_1="Shark", kwargs_2=4.5, kwargs_3=True)
 #externalFunction1.func1()
 funcFiles("write","")
 print("Present, ", end =" ") # to end the line with a space instead of \n
