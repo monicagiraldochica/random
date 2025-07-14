@@ -5,6 +5,49 @@ import myldaplib
 import ldap3
 import os
 import shutil
+import paramiko
+import getpass
+
+def ssh_command(hostname, port, username, password, command):
+	client = paramiko.SSHClient()
+	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+	output = None
+
+	try:
+		client.connect(hostname, port=port, username=username, password=password)
+		stdin, stdout, stderr = client.exec_command(command)
+		output = stdout.read().decode()
+		error = stderr.read().decode()
+		if error:
+			print(f"+++{error}+++")
+
+	except Exception as e:
+		print(f"An error occurred: {e}")
+		output = None
+
+	finally:
+		client.close()
+		return output
+
+def testUser(cmd):
+	host = myldaplib.readJSON("ssh.json","host")
+	port = myldaplib.readJSON("ssh.json","port")
+	user = input("YOUR username: ")
+	password = getpass.getpass(prompt="YOUR password: ")
+	return ssh_command(host, port, user, password, cmd)
+
+def getSLURMcommands():
+	host = myldaplib.readJSON("ssh2.json","host")
+	port = myldaplib.readJSON("ssh2.json","port")
+	user = myldaplib.readJSON("ssh2.json","user")
+	password = myldaplib.readJSON("ssh2.json","password")
+	result = create_acct_v2.ssh_command(host, port, user, password, cmd)
+	slurm_cmds = []
+	for line in result.split("\n"):
+		if line=="" or line.startswith("DRY RUN - ###"):
+			continue
+		slurm_cmds+=[line]
+	return slurm_cmds
 
 def printHelp():
 	print("Mandatory arguments:\n"
@@ -12,8 +55,13 @@ def printHelp():
 		"-p piNetID or --pi=piNetID for the networkID of the PI (same as newNetID if new user is a PI)\n" \
 		"-f first_name or --first=first_name for the first name of the user\n" \
 		"-l last_name or --last=last_name for the last name of the user\n" \
-		"--ndesktops=True to add user to Neurology Desktops\n" \
-		"--nsquiggles=True to add user to Neurology Squiggles\n" \
+		"-e email or --email=user_email for the email of the user\n\n" \
+		
+		"Optional arguments:\n" \
+		"--ndesktops to add user to Neurology Desktops\n" \
+		"--nsquiggles to add user to Neurology Squiggles\n" \
+		"--alt-contact to add alternative contact (for new PI accounts)\n" \
+		"--dry-run self explanatory\n" \
 		"-h or --help for this message.")
 
 def closeConn(conn):
@@ -23,125 +71,84 @@ def closeConn(conn):
 def exitError(conn,msg):
 	print(msg)
 	closeConn(conn)
+	sys.exit()
 
-def main():
-	# Read arguments
-	netID = None
-	piID = None
-	first_name = None
-	last_name = None
-	email = None
-	neuroDesktops = False
-	neuroSquiggles = False
-	
-	argv = sys.argv[1:]
-	try:
-		opts, args = getopt.getopt(argv, "u:p:h:f:l:e:", ["user=", "pi=", "help=", "first=", "last=", "email=", "ndesktops=", "nsquiggles="])
-	except:
-		printHelp()
-		exit("Error reading arguments")
+def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,dry_run,isPI):
+	print("These are the input arguments:\n" \
+		f"NetID of the new user: {netID}\n" \
+		f"NetID of the PI: {piID}\n" \
+		f"First name of the new user: {first_name}\n" \
+		f"Last name of the new user: {last_name}\n" \
+		f"Email of the new user: {email}\n" \
+		f"Add user to Neurology Desktops: {neuroDesktops}\n" \
+		f"Add user to Squiggles: {neuroSquiggles}\n" \
+		f"Alternative contact: {alt_contact}")
 
-	for opt,arg in opts:
-		if opt in ["-u", "--user"]:
-			netID = arg
-		elif opt in ["-p", "--pi"]:
-			piID = arg
-		elif opt in ["-h","--help"]:
-			printHelp()
-			exit()
-		elif opt in ["-f","--first"]:
-			first_name = arg
-		elif opt in ["-l","--last"]:
-			last_name = arg
-		elif opt in ["-e", "--email"]:
-			email = arg
-		elif opt in ["--ndesktops"]:
-			neuroDesktops = arg
-		elif opt in ["--nsquiggles"]:
-			neuroSquiggles = arg
+	if dry_run:
+		print("dry_run: True (Nothing will be modified)")
+	else:
+		print("dry_run: False")
 
-	if netID==None or piID==None or first_name==None or last_name==None or email==None:
-		printHelp()
-		exit("Missing arguments")
-	if not email.endswith("@mcw.edu"):
-		exit("email must be from MCW")
-	if not neuroDesktops in [True, False]:
-		printHelp()
-		exit("bad value for --ndesktops")
-	if not neuroSquiggles in [True, False]:
-		printHelp()
-		exit("bad valie for --nsquiggles")
+	if isPI:
+		print("New user is a PI")
+	else:
+		print("New user is NOT a PI")
 
-	# Connect to LDAP
-	#json_file = "mainldap.json"
-	json_file = "testldap.json"
-	ldap_setup = myldaplib.readJSON(json_file,"ldap_setup")
-	conn = myldaplib.connect_to_ldap(myldaplib.readJSON(json_file,"ldap_server"), myldaplib.readJSON(json_file,"ldap_user"), myldaplib.readJSON(json_file,"ldap_password"))
-	if not conn:
-		exit("Failed to connect to LDAP server.")
+	if input("Does this look correct? [y]: ")=='y':
+		return True
+	else:
+		return False
 
-	# Make sure the user doesn't have an account already
-	if myldaplib.getUserInfo(conn,netID,json_file)["uidNumber"]!=None:
-		exitError(conn, f"User {netID} already has an account. Send the following link that contains information on how to login: https://docs.rcc.mcw.edu/user-guide/access/login/")
+def duplicateGroups(conn):
+	groups = myldaplib.search_posix_groups(conn)
+	if not groups:
+		exitError(conn, "No posixGroup objects found.")
 
-	# Make sure the PI is an actual PI and already has an account (unless new user is a PI)
-	if netID!=piID:
-		piInfo = myldaplib.getUserInfo(conn,piID,json_file)
-		if piInfo["uidNumber"]==None:
-			exitError(conn, f"The PI ({piID}) doesn't have an account. Ask the PI to request an account first.")
+	duplicate_gids = myldaplib.find_duplicate_gids(groups)
+	if len(duplicate_gids)>0:
+		return True
+	return False
 
-		gidNum = piInfo["gidNumber"]
-		if gidNum==None or myldaplib.getGID(conn,gidNum)!="sg-"+piID:
-			exitError(conn, f"{piID} is not a PI")
-		
-	# Check that the user is not disabled
-	disabledInfo = myldaplib.getDisabledUser(conn,netID,json_file)
-	if disabledInfo["uidNumber"]!=None:
-		exitError(conn, f"User {netID} is disabled. Investigate further.")
-
-	# Get next available UID
+def duplicateUsers(conn):
 	users = myldaplib.search_posix_users(conn)
 	if not users:
 		exitError(conn, "No posixAccount objects found.")
 
-	uidNumber = myldaplib.find_next_available_uid(users)
-	print(f"Next available UID: {uidNumber}")
+	dupicate_uids = myldaplib.find_duplicate_uids(users)
+	if len(dupicate_uids)>0:
+		return True
+	return False
 
-	# If new user is not a PI, get the gidNumber of that PI
-	if netID!=piID:
-		gidNumber = myldaplib.getgidNumber(conn,"sg-"+piID)
-		if gidNumber==None:
-			exitError(conn, f"Could not find the gidNumber of sg-"+piID)
-		print(f"gidNumber for sg-{piID} is {gidNumber}")
-		
-	# If new user is a PI, get the next available gidNumber
-	else:
-		groups = myldaplib.search_posix_groups(conn)
-		if not groups:
-			exitError(conn, "No posixGroup objects found.")
+def printLDAPdic(dn,attributes):
+	print(f"dn: {dn}\nattributes:")
+	for key,val in attributes.items():
+		print(f"{key}: {val}\n")
 
-		gidNumber = myldaplib.find_next_available_gid(groups)
-		print(f"Next available GID: {gidNumber}")
+def createGroup(ldap_setup,piID,gidNumber,dry_run,conn):
+	dn = f"cn=sg-{piID},ou=Labs,ou=Groups,{ldap_setup}"
+	attributes = {
+		'objectClass': ['top', 'posixGroup'],
+		'cn': f"sg-{piID}",
+		'gidNumber': gidNumber,
+		'memberUid': piID
+		}
 
-	# If it's a PI, create new group in ldap
-	# THIS BELOW CHANGES FOR NEW LDAP
-	# member changed to memberUid & format is just netID
-	if netID==piID:
-		dn = "cn=sg-"+piID+",ou=Labs,ou=Groups,"+ldap_setup
-		attributes = {
-			'objectClass': ['top', 'posixGroup', 'groupOfNames'],
-			'cn': "sg-"+piID,
-			'gidNumber': gidNumber,
-			'member':"uid="+netID+",ou=Users,"+ldap_setup
-			}
-
+	if not dry_run:
 		conn.add(dn, attributes=attributes)
-		if conn.result['result'] == 0:
+		
+		if conn.result['result']==0:
 			print(f"Successfully created group sg-{piID}")
-		else:
-			exitError(conn, f"Failed to create group sg-{piID}: {conn.result['message']}")
 
-	# Add new user in ldap
+			if not duplicateGroups(conn):
+				input("No duplicate GIDs after creating group [Enter]")
+			else:
+				exitError(conn,"Duplicate GIDs found after creating group")
+		else:
+			exitError(conn,"Failed to create group sg-{piID}: {conn.result['message']}")
+	else:
+		printLDAPdic(dn,attributes)
+
+def createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,dry_run,conn):
 	dn = f"uid={netID},ou=Users,{ldap_setup}"
 	attributes = {
 		'objectClass': ['top', 'shadowAccount', 'posixAccount', 'inetOrgPerson'],
@@ -159,79 +166,292 @@ def main():
 		'userPassword': "{SASL}"+netID+"@mcw.edu"
 		}
 
-	conn.add(dn, attributes=attributes)	
-	if conn.result['result'] == 0:
-		print(f"Successfully added user {netID}")
+	if not dry_run:
+		conn.add(dn, attributes=attributes)
+		
+		if conn.result['result']==0:
+			print(f"Successfully added user {netID}")
+
+			if not duplicateUsers(conn):
+				input("No duplicate UIDs found after adding user [Enter]")
+			else:
+				exitError(conn,"Duplicate UIDs found after adding user")
+
+		else:
+			exitError(conn,"Failed to add user {netID}: {conn.result['message']}")
+
 	else:
-		exitError(conn, f"Failed to add user {netID}: {conn.result['message']}")
+		printLDAPdic(dn,attributes)
+
+def addUserToGroup(ldap_setup,piID,netID,dry_run,conn):
+	dn = "cn=sg-"+piID+",ou=Labs,ou=Groups,"+ldap_setup
+	attributes = {
+		'memberUid': [(ldap3.MODIFY_ADD, [netID])]
+		}
+
+	if not dry_run:
+		conn.modify(dn, attributes)
+
+		if conn.result['result']==0:
+			input(f"Successfully added user {netID} to sg-{piID} group [Enter]")
+		else:
+			exitError(conn,f"Failed to add user {netID} to sg-{piID} group: {conn.result['message']}")
+
+	else:
+		printLDAPdic(dn,attributes)
+
+def addUserToMachine(ldap_setup,machines,netID,dry_run,conn):
+	dn = "cn=sg-{machines},ou=Neurology,ou=Machines,ou=Groups,{ldap_setup}"
+	attributes = {
+		'member': [(ldap3.MODIFY_ADD, ["uid="+netID+",ou=Users,"+ldap_setup])]
+		}
+
+	if not dry_run:
+		conn.modify(dn, attributes)
+
+		if conn.result['result']==0:
+			input(f"Successfully added user {netID} to Neurology Desktops [Enter]")
+		else:
+			exitError(conn, f"Failed to add user {netID} to Neurology Desktops: {conn.result['message']}")
+
+	else:
+		printLDAPdic(dn,attributes)
+
+def main():
+	# Read arguments
+	netID = None
+	piID = None
+	first_name = None
+	last_name = None
+	email = None
+	neuroDesktops = False
+	neuroSquiggles = False
+	alt_contact = None
+	dry_run = False
+	
+	argv = sys.argv[1:]
+	try:
+		opts, args = getopt.getopt(argv, "u:p:h:f:l:e:", ["user=", "pi=", "help", "first=", "last=", "email=", "ndesktops", "nsquiggles", "alt-contact=", "dry-run"])
+	except:
+		printHelp()
+		sys.exit("Error reading arguments")
+
+	for opt,arg in opts:
+		if opt in ["-u", "--user"]: 
+			netID = arg
+		elif opt in ["-p", "--pi"]:
+			piID = arg
+		elif opt in ["-h","--help"]:
+			printHelp()
+			exit()
+		elif opt in ["-f","--first"]:
+			first_name = arg
+		elif opt in ["-l","--last"]:
+			last_name = arg
+		elif opt in ["-e", "--email"]:
+			email = arg
+		elif opt in ["--ndesktops"]:
+			neuroDesktops = True
+		elif opt in ["--nsquiggles"]:
+			neuroSquiggles = True
+		elif opt in ["--alt-contact"]:
+			alt_contact = arg
+		elif opt in ["--dry-run"]:
+			dry_run = True
+
+	NL = False
+	if netID==None:
+		netID = input("netID of the new user: ")
+		NL = True
+	if piID==None:
+		piID = input("netID of the PI: ")
+		NL = True
+	if first_name==None:
+		first_name = input("First name of the new user: ")
+		NL = True
+	if last_name==None:
+		last_name = input("Last name of the new user: ")
+		NL = True
+	if email==None:
+		email = input("Email of the new user: ")
+		NL = True
+	isPI = netID!=None and netID==piID
+	if isPI and alt_contact==None:
+		alt_contact = input("Alternative contact ([Enter if none]): ")
+		if alt_contact=="":
+			alt_contact = None
+	if NL:
+		print("\n")
+
+	if netID==None or piID==None or first_name==None or last_name==None or email==None:
+		printHelp()
+		sys.exit("Missing arguments")
+	if not email.endswith("@mcw.edu"):
+		sys.exit("email must be from MCW")
+	if alt_contact!=None and not alt_contact.endswith("@mcw.edu"):
+		sys.exit("Alternative contact must be an email from MCW")
+	if alt_contact!=None and not isPI:
+		print("Alternative contact has a value, but this new account does not seem to be a new PI. This variable will be ignored.")
+		if input("Continue? [y]: ")!='y':
+			sys.exit("Exiting")
+
+	first_name = first_name.capitalize()
+	last_name = last_name.capitalize()
+	if not confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,dry_run,isPI):
+		sys.exit("Correct arguments & re-run the script. Exiting.")
+
+	# Connect to LDAP
+	json_file = "mainldap.json"
+	#json_file = "testldap.json"
+	ldap_setup = myldaplib.readJSON(json_file,"ldap_setup")
+	conn = myldaplib.connect_to_ldap(myldaplib.readJSON(json_file,"ldap_server"), myldaplib.readJSON(json_file,"ldap_user"), myldaplib.readJSON(json_file,"ldap_password"))
+	if not conn:
+		sys.exit("Failed to connect to LDAP server.")
+
+	# Make sure the user doesn't have an account already
+	if myldaplib.getUserInfo(conn,netID,json_file)["uidNumber"]!=None:
+		exitError(conn, f"User {netID} already has an account. Send the following link that contains information on how to login: https://docs.rcc.mcw.edu/user-guide/access/login/")
+
+	# Make sure the users' PI is an actual PI and already has an account (unless new user is a PI)
+	if not isPI:
+		piInfo = myldaplib.getUserInfo(conn,piID,json_file)
+		if piInfo["uidNumber"]==None:
+			exitError(conn, f"The PI ({piID}) doesn't have an account. Ask the PI to request an account first.")
+
+		gidNum = piInfo["gidNumber"]
+		if gidNum==None or myldaplib.getGID(conn,gidNum)!="sg-"+piID:
+			exitError(conn, f"{piID} is not a PI")
+		
+	# Check that the user is not disabled
+	disabledInfo = myldaplib.getDisabledUser(conn,netID,json_file)
+	if disabledInfo["uidNumber"]!=None:
+		exitError(conn, f"\nUser {netID} is disabled. Investigate further.")
+	print("\n")
+
+	# Get next available UID
+	users = myldaplib.search_posix_users(conn)
+	if not users:
+		exitError(conn, "No posixAccount objects found.")
+
+	uidNumber = myldaplib.find_next_available_uid(users)
+	input(f"Using UID: {uidNumber} [Enter]")
+	
+	# If new user is not a PI, get the gidNumber of that PI
+	if not isPI:
+		gidNumber = myldaplib.getgidNumber(conn,"sg-"+piID)
+		if gidNumber==None:
+			exitError(conn, f"Could not find the gidNumber of sg-"+piID)
+		print(f"gidNumber for sg-{piID} is {gidNumber}")
+		
+	# If new user is a PI, get the next available gidNumber
+	else:
+		groups = myldaplib.search_posix_groups(conn)
+		if not groups:
+			exitError(conn, "No posixGroup objects found.")
+
+		gidNumber = myldaplib.find_next_available_gid(groups)
+		input(f"Using GID: {gidNumber} [Enter]")
+
+	# If it's a PI, create new group in ldap
+	if isPI:
+		createGroup(ldap_setup,piID,gidNumber,dry_run,conn)
+
+	# Add new user in ldap
+	createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,dry_run,conn)
 
 	# If it's not a PI, add user to the corresponding group
-	# THIS BELOW CHANGES FOR NEW LDAP
-	# member changed to memberUid & format is just the netID
-	if netID!=piID:
-		dn = "cn=sg-"+piID+",ou=Labs,ou=Groups,"+ldap_setup
-		dic = {
-			'member': [(ldap3.MODIFY_ADD, ["uid="+netID+",ou=Users,"+ldap_setup])]
-			}
-
-		conn.modify(dn, dic)
-		if conn.result['result'] == 0:
-			print(f"Successfully added user {netID} to sg-{piID} group")
-		else:
-			exitError(conn, f"Failed to add user {netID} to sg-{piID} group: {conn.result['message']}")
+	if not isPI:
+		addUserToGroup(ldap_setup,piID,netID,dry_run,conn)
 
 	# Add to department machine if they ask so
 	if neuroDesktops:
-		dn = "cn=sg-neurology-desktops,ou=Neurology,ou=Machines,ou=Groups,"+ldap_setup
-		dic = {
-			'member': [(ldap3.MODIFY_ADD, ["uid="+netID+",ou=Users,"+ldap_setup])]
-			}
-
-		conn.modify(dn, dic)
-		if conn.result['result'] == 0:
-			print(f"Successfully added user {netID} to Neurology Desktops")
-		else:
-			exitError(conn, f"Failed to add user {netID} to Neurology Desktops: {conn.result['message']}"        )
+		addUserToMachine(ldap_setup,"neurology-desktops",netID,dry_run,conn)
 		
 	if neuroSquiggles:
-		dn = "cn=sg-neurology-squiggles,ou=Neurology,ou=Machines,ou=Groups,"+ldap_setup
-		dic = {
-			'member': [(ldap3.MODIFY_ADD, ["uid="+netID+",ou=Users,"+ldap_setup])]
-			}
+		addUserToMachine(ldap_setup,"neurology-squiggles",netID,dry_run,conn)
 
-		conn.modify(dn, dic)
-		if conn.result['result'] == 0:
-			print(f"Successfully added user {netID} to Neurology Desktops")
-		else:
-			exitError(conn, f"Failed to add user {netID} to Neurology Desktops: {conn.result['message'        ]}"        )
+	if dry_run:
+		exit("The rest of the script can't run in dry_run")
 
-		# Create directories and give permissions
-		try:
-			newdir = f"/qumulo_homefs/{netID}/"
-			os.makedirs(newdir,0o700)
-			os.chown(newdir,uidNumber,gidNumber)
+	# Create directories and give permissions
+	try:
+		newdir = f"/qumulo_homefs/{netID}/"
+		os.makedirs(newdir,0o700)
+		os.chown(newdir,uidNumber,gidNumber)
 
-			for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]
-				shutil.copy(f"/adminfs/skel/{fname}",newdir)
+		for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
+			shutil.copy(f"/adminfs/skel/{fname}",newdir)
 
+		print(f"{newdir} successfully created")
+
+		# If it's a PI, create group and scartch dirs
+		if isPI:
+			newdir = f"/group/{piID}/"
+			os.makedirs(newdir,0o755)
+			os.chown(newdir,"root",f"sg-{piID}")
 			print(f"{newdir} successfully created")
-		except:
-			exitError(conn, f"Could not create directory {newdir}")	
+			input("[Enter]")
 
-		# Put user in SLURM scheduler
+			newdir = f"/group/{piID}/work"
+			os.makedirs(newdir,0o2770)
+			os.chown(newdir,"root",f"sg-{piID}")
+			print(f"{newdir} successfully created")
+			input("[Enter]")
 
-		# Set home directory quota
+			newdir = f"/scratch/g/{piID}"
+			os.makedirs(newdir,0o2770)
+			os.chown(newdir,"root",f"sg-{piID}")
+			print(f"{newdir} successfully created")
+			input("[Enter]")
+	except:
+		exitError(conn, "Could not create directories")	
+	
+	# Do checks
+	id_test = testUser(f"id {netID}").replace("\n","")
+	if id_test==None:
+		input(f"Check: id {netID} [Enter]")
+	else:
+		print(f"id {netID}: {id_test}")
+		if not id_test==f"uid={uidNumber}({netID}) gid={gidNumber}(sg-{piID})" and input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort [y]: ")=='y':
+			exitError(conn, "id test not passed")
 
-		# Send email
+	# Put user in SLURM scheduler
+	input("\nLogin to hn01 [Enter]")
+	input("ssh to sn01 [Enter]")
+	input("Login as root [Enter]")
+	input("Run all the commands from: time python3 slurm-update-auth-fast.py [Enter]")
 
-	# Check that here are no duplicates after all
-	users = myldaplib.search_posix_users(conn)
-	dupicate_uids = myldaplib.find_duplicate_uids(users)
-	print(f"There are {len(dupicate_uids)} duplicate users")
+	# Check the user account
+	print("\nLogin as root in login node. Then:")
+	print(f"su - {netID}")
+	print("mydisks")
+	print("myaccts")
+	print("exit")
+	fin_name = input("file where the output of previous commands are copy pasted: ")
+	if not os.path.isfile(fin_name):
+		exitError(conn, f"{fin_name} does not exist")
+	fin = open(fin_name, 'r')
+	userTest = fin.read()
+	fin.close()
+	os.remove(fin_name)
 
-	groups = myldaplib.search_posix_groups(conn)
-	duplicate_gids = myldaplib.find_duplicate_gids(groups)
-	print(f"There are {len(duplicate_gids)} duplicate groups")
+	# Set home directory quota
+	input("Go to https://qfs2.rcc.mcw.edu/login?next=%2Fquotas [Enter]")
+	input(f"Add homefs/{netID}/ with 100GB [Enter]")
+
+	if netID==piID:
+		input(f"Add groupfs/{piID} with 1TB [Enter]")
+		input(f"Mount SMB qfs2 (use mcwcorp\), go to KeePass and get the password for admin in qfs1 nvme [Enter]")
+		input("Go to https://141.106.222.221/quotas [Enter]")
+		input(f"Create scratchfs/g/{piID} with 5TB")
+
+	# Send email
+	file1 = open("email_newAcct.txt","r")
+	email_content = file1.read()
+	email_content = email_content.replace("<first_name>",first_name).replace("<netID>",netID).replace("<user_test>",userTest)
+	print(email_content)
+	file1.close()
+	input("Send email [Enter]")
 
 	# Unbind and close the connection
 	closeConn(conn)

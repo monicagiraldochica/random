@@ -1,7 +1,0 @@
----
-name: Phenix - Volkman Lab
-category: Condo Apps
-subcategory: HPC Cluster
-role: batch_connect
-description: |
-  This app will launch Phenix App on the Volkman condo server.
