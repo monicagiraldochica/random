@@ -1,8 +1,8 @@
-#import urllib2
-# importing the requests library
-# pip install requests (if not installed)
+#!/usr/bin/env python3
+__author__ = "Monica Keith"
+__status__ = "Production"
+
 import requests
-#import wget
 
 def is_downloadable(url):
     """

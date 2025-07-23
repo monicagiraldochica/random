@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+__author__ = "Monica Keith"
+__status__ = "Production"
+
 import externalFunction1
 import os
 #from os import path

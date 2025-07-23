@@ -1,4 +1,8 @@
-# POSITIONAL ARGUMENTS
+#!/usr/bin/env python3
+__author__ = "Monica Keith"
+__status__ = "Production"
+__purpose__ = "Positional arguments"
+
 import argparse
 
 parser = argparse.ArgumentParser()
