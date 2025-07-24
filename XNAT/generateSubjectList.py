@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+__author__ = "Monica Keith"
+__status__ = "Production"
+
 import subprocess
 import getpass
 
