@@ -187,9 +187,7 @@ def createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,d
 
 def addUserToGroup(ldap_setup,piID,netID,dry_run,conn):
 	dn = "cn=sg-"+piID+",ou=Labs,ou=Groups,"+ldap_setup
-	attributes = {
-		'memberUid': [(ldap3.MODIFY_ADD, [netID])]
-		}
+	attributes = {'memberUid': [(ldap3.MODIFY_ADD, [netID])]}
 
 	if not dry_run:
 		conn.modify(dn, attributes)
@@ -204,9 +202,7 @@ def addUserToGroup(ldap_setup,piID,netID,dry_run,conn):
 
 def addUserToMachine(ldap_setup,machines,netID,dry_run,conn):
 	dn = "cn=sg-{machines},ou=Neurology,ou=Machines,ou=Groups,{ldap_setup}"
-	attributes = {
-		'member': [(ldap3.MODIFY_ADD, ["uid="+netID+",ou=Users,"+ldap_setup])]
-		}
+	attributes = {'member': [(ldap3.MODIFY_ADD, ["uid="+netID+",ou=Users,"+ldap_setup])]}
 
 	if not dry_run:
 		conn.modify(dn, attributes)
@@ -218,6 +214,32 @@ def addUserToMachine(ldap_setup,machines,netID,dry_run,conn):
 
 	else:
 		printLDAPdic(dn,attributes)
+
+def reEnableUser(ldap_setup,netID,dry_run,conn):
+	old_dn = f"uid={netID},ou=DisableUsers,{ldap_setup}"
+	new_rdn = f"uid={netID}"
+	new_superior_dn = f"ou=Users,{ldap_setup}"
+
+	if not dry_run:
+		if conn.modify_dn(old_dn, new_rdn, new_superior=new_superior_dn, delete_old_dn=True):
+			input(f"Successfully changed DN of '{old_dn}' to '{new_rdn},{new_superior_dn}' [Enter]")
+		else:
+			exitError(conn, f"Failed to change DN: {conn.result}")
+	else:
+		print(f"old_dn: {old_dn}\nnew_dn: {new_rdn},{new_superior_dn}")
+
+def reEnableGroup(ldap_setup,piID,dry_run,conn):
+	old_dn = f"cn=sg-{piID},ou=DisableGroups,{ldap_setup}"
+	new_rdn = f"cn=sg-{piID}"
+	new_superior_dn = f"ou=Labs,ou=Groups,{ldap_setup}"
+
+	if not dry_run:
+		if conn.modify_dn(old_dn, new_rdn, new_superior=new_superior_dn, delete_old_dn=True):
+			input(f"Successfully changed DN of '{old_dn}' to '{new_rdn},{new_superior_dn}' [Enter]")
+		else:
+			exitError(conn, f"Failed to change DN: {conn.result}")
+	else:
+		print(f"old_dn: {old_dn}\nnew_dn: {new_rdn},{new_superior_dn}")
 
 def main():
 	# Read arguments
@@ -332,43 +354,58 @@ def main():
 		
 	# Check that the user is not disabled
 	disabledInfo = myldaplib.getDisabledUser(conn,netID,json_file)
+	reEnbl = False
 	if disabledInfo["uidNumber"]!=None:
-		exitError(conn, f"\nUser {netID} is disabled. Investigate further.")
+		if input(f"User {netID} is disabled. Do you whish to re-enable? [y]: ")!='y':
+			exitError(conn, f"\nInvestigate further.")
+		else:
+			if isPI:
+				reEnableGroup(ldap_setup,piID,dry_run,conn)
+			reEnableUser(ldap_setup,netID,dry_run,conn)
+			reEnbl = True
 	print("\n")
 
 	# Get next available UID
-	users = myldaplib.search_posix_users(conn)
-	if not users:
-		exitError(conn, "No posixAccount objects found.")
+	if not reEnbl:
+		users = myldaplib.search_posix_users(conn)
+		if not users:
+			exitError(conn, "No posixAccount objects found.")
 
-	uidNumber = myldaplib.find_next_available_uid(users)
-	input(f"Using UID: {uidNumber} [Enter]")
+		uidNumber = myldaplib.find_next_available_uid(users)
+		input(f"Using UID: {uidNumber} [Enter]")
+	else:
+		uidNumber = myldaplib.getUserInfo(conn,netID,json_file)['uidNumber']
+		input(f"UID of re-enabled user {netID}: {uidNumber} [Enter]")
 	
-	# If new user is not a PI, get the gidNumber of that PI
-	if not isPI:
+	# If new user is not a PI and not a re-enabled user, get the gidNumber of that PI
+	if not isPI and not reEnbl:
 		gidNumber = myldaplib.getgidNumber(conn,"sg-"+piID)
 		if gidNumber==None:
 			exitError(conn, f"Could not find the gidNumber of sg-"+piID)
 		print(f"gidNumber for sg-{piID} is {gidNumber}")
 		
-	# If new user is a PI, get the next available gidNumber
-	else:
+	# If new user is a PI and not re-enabled, get the next available gidNumber
+	elif not reEnbl:
 		groups = myldaplib.search_posix_groups(conn)
 		if not groups:
 			exitError(conn, "No posixGroup objects found.")
 
 		gidNumber = myldaplib.find_next_available_gid(groups)
 		input(f"Using GID: {gidNumber} [Enter]")
+	else:
+		gidNumber = myldaplib.getUserInfo(conn,netID,json_file)['gidNumber']
+		input(f"GID of re-enabled group sg-{netID} is {gidNumber} [Enter]")
 
-	# If it's a PI, create new group in ldap
-	if isPI:
+	# If it's a PI and is not re-enabled, create new group in ldap
+	if isPI and not reEnbl:
 		createGroup(ldap_setup,piID,gidNumber,dry_run,conn)
 
-	# Add new user in ldap
-	createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,dry_run,conn)
+	# Add new user in ldap (if it's not a re-enabled user)
+	if not reEnbl:
+		createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,dry_run,conn)
 
 	# If it's not a PI, add user to the corresponding group
-	if not isPI:
+	if not isPI and not reEnbl:
 		addUserToGroup(ldap_setup,piID,netID,dry_run,conn)
 
 	# Add to department machine if they ask so
