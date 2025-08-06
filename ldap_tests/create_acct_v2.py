@@ -7,6 +7,8 @@ import os
 import shutil
 import paramiko
 import getpass
+from googlesearch import search
+import re
 
 def ssh_command(hostname, port, username, password, command):
 	client = paramiko.SSHClient()
@@ -75,14 +77,14 @@ def exitError(conn,msg):
 
 def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,dry_run,isPI):
 	print("These are the input arguments:\n" \
-		f"NetID of the new user: {netID}\n" \
-		f"NetID of the PI: {piID}\n" \
-		f"First name of the new user: {first_name}\n" \
-		f"Last name of the new user: {last_name}\n" \
-		f"Email of the new user: {email}\n" \
-		f"Add user to Neurology Desktops: {neuroDesktops}\n" \
-		f"Add user to Squiggles: {neuroSquiggles}\n" \
-		f"Alternative contact: {alt_contact}")
+		f"NetID of the new user:{netID}.\n" \
+		f"NetID of the PI:{piID}.\n" \
+		f"First name of the new user:{first_name}.\n" \
+		f"Last name of the new user:{last_name}.\n" \
+		f"Email of the new user:{email}.\n" \
+		f"Add user to Neurology Desktops:{neuroDesktops}.\n" \
+		f"Add user to Squiggles:{neuroSquiggles}.\n" \
+		f"Alternative contact:{alt_contact}.")
 
 	if dry_run:
 		print("dry_run: True (Nothing will be modified)")
@@ -238,50 +240,44 @@ def main():
 
 	for opt,arg in opts:
 		if opt in ["-u", "--user"]: 
-			netID = arg
+			netID = arg.strip()
 		elif opt in ["-p", "--pi"]:
-			piID = arg
+			piID = arg.strip()
 		elif opt in ["-h","--help"]:
 			printHelp()
 			exit()
 		elif opt in ["-f","--first"]:
-			first_name = arg
+			first_name = arg.strip()
 		elif opt in ["-l","--last"]:
-			last_name = arg
+			last_name = arg.strip()
 		elif opt in ["-e", "--email"]:
-			email = arg
+			email = arg.strip()
 		elif opt in ["--ndesktops"]:
 			neuroDesktops = True
 		elif opt in ["--nsquiggles"]:
 			neuroSquiggles = True
 		elif opt in ["--alt-contact"]:
-			alt_contact = arg
+			alt_contact = arg.strip()
 		elif opt in ["--dry-run"]:
 			dry_run = True
 
-	NL = False
 	if netID==None:
-		netID = input("netID of the new user: ")
-		NL = True
+		netID = input("netID of the new user: ").strip()
 	if piID==None:
-		piID = input("netID of the PI: ")
-		NL = True
+		piID = input("netID of the PI: ").strip()
 	if first_name==None:
-		first_name = input("First name of the new user: ")
-		NL = True
+		first_name = input("First name of the new user: ").strip()
 	if last_name==None:
-		last_name = input("Last name of the new user: ")
-		NL = True
+		last_name = input("Last name of the new user: ").strip()
 	if email==None:
-		email = input("Email of the new user: ")
-		NL = True
+		email = input("Email of the new user: ").strip()
 	isPI = netID!=None and netID==piID
 	if isPI and alt_contact==None:
 		alt_contact = input("Alternative contact ([Enter if none]): ")
 		if alt_contact=="":
 			alt_contact = None
-	if NL:
-		print("\n")
+		else:
+			alt_contact = alt_contact.strip()
 
 	if netID==None or piID==None or first_name==None or last_name==None or email==None:
 		printHelp()
@@ -295,14 +291,26 @@ def main():
 		if input("Continue? [y]: ")!='y':
 			sys.exit("Exiting")
 
+	netID = re.sub(r'[^a-zA-Z0-9\s]', '', netID)
+	piID = re.sub(r'[^a-zA-Z0-9\s]', '', piID)
 	first_name = first_name.capitalize()
+	first_name = re.sub(r'[^a-zA-Z0-9\s]', '', first_name)
 	last_name = last_name.capitalize()
+	last_name = re.sub(r'[^a-zA-Z0-9\s]', '', last_name)
 	if not confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,dry_run,isPI):
 		sys.exit("Correct arguments & re-run the script. Exiting.")
 
+	# Check that the PI is an actual PI
+	if isPI:
+		print(f"Check the following links to confirm that {first_name} {last_name} is a PI at MCW:")
+		res = search(f"{first_name} {last_name} Medical College of Wisconsin", num_results=10, unique=True, lang="en", region="us")
+		for link in res:
+			print(link)
+		if input("Did the PI checkout? [y]: ")!='y':
+			sys.exit("Investigate further before adding user")
+
 	# Connect to LDAP
 	json_file = "mainldap.json"
-	#json_file = "testldap.json"
 	ldap_setup = myldaplib.readJSON(json_file,"ldap_setup")
 	conn = myldaplib.connect_to_ldap(myldaplib.readJSON(json_file,"ldap_server"), myldaplib.readJSON(json_file,"ldap_user"), myldaplib.readJSON(json_file,"ldap_password"))
 	if not conn:
@@ -375,34 +383,23 @@ def main():
 
 	# Create directories and give permissions
 	try:
-		newdir = f"/qumulo_homefs/{netID}/"
-		os.makedirs(newdir,0o700)
-		os.chown(newdir,uidNumber,gidNumber)
+		dic = {f"/qumulo_homefs/{netID}/":[700,uidNumber,gidNumber],
+			f"/group/{piID}/":[755,"root",f"sg-{piID}"],
+			f"/group/{piID}/work":[2770,"root",f"sg-{piID}"],
+			f"/scratch/g/{piID}":[2770,"root",f"sg-{piID}"]}
+
+		for newdir,array in dic.items():
+			os.system(f"mkdir {newdir}")
+			os.system(f"chmod {array[0]} {newdir}")
+			os.system(f"chown -R {array[1]}:{array[2]} {newdir}")
+			input(f"{newdir} successfully created [Enter]")
+
+			if not isPI:
+				break
 
 		for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
-			shutil.copy(f"/adminfs/skel/{fname}",newdir)
-
-		print(f"{newdir} successfully created")
-
-		# If it's a PI, create group and scartch dirs
-		if isPI:
-			newdir = f"/group/{piID}/"
-			os.makedirs(newdir,0o755)
-			os.chown(newdir,"root",f"sg-{piID}")
-			print(f"{newdir} successfully created")
-			input("[Enter]")
-
-			newdir = f"/group/{piID}/work"
-			os.makedirs(newdir,0o2770)
-			os.chown(newdir,"root",f"sg-{piID}")
-			print(f"{newdir} successfully created")
-			input("[Enter]")
-
-			newdir = f"/scratch/g/{piID}"
-			os.makedirs(newdir,0o2770)
-			os.chown(newdir,"root",f"sg-{piID}")
-			print(f"{newdir} successfully created")
-			input("[Enter]")
+			shutil.copy(f"/adminfs/skel/{fname}",list(dic.keys())[0])
+		input(f"{list(dic.keys())[0]} successfully populated [Enter]")
 	except:
 		exitError(conn, "Could not create directories")	
 	
@@ -436,20 +433,22 @@ def main():
 	os.remove(fin_name)
 
 	# Set home directory quota
-	input("Go to https://qfs2.rcc.mcw.edu/login?next=%2Fquotas [Enter]")
+	input("Go to https://qfs2.rcc.mcw.edu/login?next=%2Fquotas (include mcwcorp\) [Enter]")
 	input(f"Add homefs/{netID}/ with 100GB [Enter]")
 
 	if netID==piID:
 		input(f"Add groupfs/{piID} with 1TB [Enter]")
-		input(f"Mount SMB qfs2 (use mcwcorp\), go to KeePass and get the password for admin in qfs1 nvme [Enter]")
+		input("Mount SMB qfs2 (use mcwcorp\) [Enter]")
+		input(f"Go to KeePass and get the password for admin in Storage > qfs1 nvme. Do not close KeePass. [Enter]")
 		input("Go to https://141.106.222.221/quotas [Enter]")
-		input(f"Create scratchfs/g/{piID} with 5TB")
+		print("Now you can close KeePass")
+		input(f"Create quota for scratchfs/g/{piID} with 5TB")
 
 	# Send email
 	file1 = open("email_newAcct.txt","r")
 	email_content = file1.read()
 	email_content = email_content.replace("<first_name>",first_name).replace("<netID>",netID).replace("<user_test>",userTest)
-	print(email_content)
+	print("\n"+email_content)
 	file1.close()
 	input("Send email [Enter]")
 

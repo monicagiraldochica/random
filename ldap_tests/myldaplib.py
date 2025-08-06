@@ -2,6 +2,7 @@
 import ldap3
 import subprocess
 import json
+import string
 
 def readJSON(json_file,key):
 	try:
@@ -23,22 +24,22 @@ def connect_to_ldap(server, user, password):
         return None
 
 def search_posix_groups(conn):
-    search_base = readJSON("mainldap.json","ldap_setup")
-    search_filter = "(objectClass=posixGroup)"
-    attributes = ['cn', 'gidNumber']
+    search_base = "dc=rcc,dc=mcw,dc=edu"  # Modify according to your LDAP setup
+    search_attributes = ['cn', 'gidNumber']
 
     groups = {}
-    conn.search(search_base, search_filter, attributes=attributes)
-    for entry in conn.response:
-        if 'attributes' in entry:
-            attributes = entry['attributes']
-            group = attributes['cn'][0]
-            try:
-                gid = int(attributes['gidNumber'][0])
-            except:
-                gid = int(attributes['gidNumber'])
-            groups[group] = gid
-
+    for letter in string.ascii_lowercase:
+        search_filter = f"(&(objectClass=posixGroup)(cn={letter}*))"
+        entries = conn.extend.standard.paged_search(search_base, search_filter, attributes=search_attributes, paged_size=500, generator=False)
+        for entry in entries:
+            if 'attributes' in entry:
+                attrs = entry['attributes']
+                group = attrs['cn'][0]
+                try:
+                    gid = int(attrs['gidNumber'][0])
+                except:
+                    gid = int(attrs['gidNumber'])
+                groups[group] = gid
     return groups
 
 def getGID(conn,gidNumber):
@@ -78,22 +79,22 @@ def getgidNumber(conn,gid):
 	return None
 
 def search_posix_users(conn):
-    search_base = readJSON("mainldap.json","ldap_setup")
-    search_filter = "(objectClass=posixAccount)"
-    attributes = ['cn', 'uidNumber']
+    search_base = "dc=rcc,dc=mcw,dc=edu"  # Modify according to your LDAP setup
+    search_attributes = ['cn', 'uidNumber']
 
     users = {}
-    conn.search(search_base, search_filter, attributes=attributes)
-    for entry in conn.response:
-        if 'attributes' in entry:
-            attributes = entry['attributes']
-            user = attributes['cn'][0]
-            try:
-                uid = int(attributes['uidNumber'][0])
-            except:
-                uid = int(attributes['uidNumber'])
-            users[user] = uid
-
+    for letter in string.ascii_lowercase:
+        search_filter = f"(&(objectClass=posixAccount)(uid={letter}*))"
+        entries = conn.extend.standard.paged_search(search_base, search_filter, attributes=search_attributes, paged_size=500, generator=False)
+        for entry in entries:
+            if 'attributes' in entry:
+                attrs = entry['attributes']
+                user = attrs['cn'][0]
+                try:
+                    uid = int(attrs['uidNumber'][0])
+                except:
+                    uid = int(attrs['uidNumber'])
+                users[user] = uid
     return users
 
 def getUserInfo(conn,username,ldapfile):
