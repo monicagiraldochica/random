@@ -1,2 +1,5 @@
 .DS_Store
 *.swp
+ldap_tests/*.json
+ldap_tests/email_newAcct.txt
+ldap_tests/__pycache__

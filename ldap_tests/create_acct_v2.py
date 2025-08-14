@@ -10,6 +10,29 @@ import getpass
 from googlesearch import search
 import re
 
+def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber):
+	try:
+		dic = {f"/qumulo_homefs/{netID}/":[700,uidNumber,gidNumber],
+			f"/group/{piID}/":[755,"root",f"sg-{piID}"],
+			f"/group/{piID}/work":[2770,"root",f"sg-{piID}"],
+			f"/scratch/g/{piID}":[2770,"root",f"sg-{piID}"]}
+
+		for newdir,array in dic.items():
+			os.system(f"mkdir {newdir}")
+			os.system(f"chmod {array[0]} {newdir}")
+			os.system(f"chown -R {array[1]}:{array[2]} {newdir}")
+			input(f"{newdir} successfully created [Enter]")
+
+			if not isPI:
+				break
+
+		for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
+			shutil.copy(f"/adminfs/skel/{fname}",list(dic.keys())[0])
+		input(f"{list(dic.keys())[0]} successfully populated [Enter]")
+
+	except:
+		exitError(conn, "Could not create directories")
+
 def ssh_command(hostname, port, username, password, command):
 	client = paramiko.SSHClient()
 	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -43,7 +66,10 @@ def getSLURMcommands():
 	port = myldaplib.readJSON("ssh2.json","port")
 	user = myldaplib.readJSON("ssh2.json","user")
 	password = myldaplib.readJSON("ssh2.json","password")
-	result = create_acct_v2.ssh_command(host, port, user, password, cmd)
+	result = ssh_command(host, port, user, password, "python3 slurm-update-auth-fast.py")
+	if result==None:
+		return None
+
 	slurm_cmds = []
 	for line in result.split("\n"):
 		if line=="" or line.startswith("DRY RUN - ###"):
@@ -116,8 +142,8 @@ def duplicateUsers(conn):
 	if not users:
 		exitError(conn, "No posixAccount objects found.")
 
-	dupicate_uids = myldaplib.find_duplicate_uids(users)
-	if len(dupicate_uids)>0:
+	duplicate_uids = myldaplib.find_duplicate_uids(users)
+	if len(duplicate_uids)>0:
 		return True
 	return False
 
@@ -269,9 +295,9 @@ def main():
 			printHelp()
 			exit()
 		elif opt in ["-f","--first"]:
-			first_name = arg.strip()
+			first_name = arg.strip().capitalize()
 		elif opt in ["-l","--last"]:
-			last_name = arg.strip()
+			last_name = arg.strip().capitalize()
 		elif opt in ["-e", "--email"]:
 			email = arg.strip()
 		elif opt in ["--ndesktops"]:
@@ -288,9 +314,9 @@ def main():
 	if piID==None:
 		piID = input("netID of the PI: ").strip()
 	if first_name==None:
-		first_name = input("First name of the new user: ").strip()
+		first_name = input("First name of the new user: ").strip().capitalize()
 	if last_name==None:
-		last_name = input("Last name of the new user: ").strip()
+		last_name = input("Last name of the new user: ").strip().capitalize()
 	if email==None:
 		email = input("Email of the new user: ").strip()
 	isPI = netID!=None and netID==piID
@@ -419,26 +445,7 @@ def main():
 		exit("The rest of the script can't run in dry_run")
 
 	# Create directories and give permissions
-	try:
-		dic = {f"/qumulo_homefs/{netID}/":[700,uidNumber,gidNumber],
-			f"/group/{piID}/":[755,"root",f"sg-{piID}"],
-			f"/group/{piID}/work":[2770,"root",f"sg-{piID}"],
-			f"/scratch/g/{piID}":[2770,"root",f"sg-{piID}"]}
-
-		for newdir,array in dic.items():
-			os.system(f"mkdir {newdir}")
-			os.system(f"chmod {array[0]} {newdir}")
-			os.system(f"chown -R {array[1]}:{array[2]} {newdir}")
-			input(f"{newdir} successfully created [Enter]")
-
-			if not isPI:
-				break
-
-		for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
-			shutil.copy(f"/adminfs/skel/{fname}",list(dic.keys())[0])
-		input(f"{list(dic.keys())[0]} successfully populated [Enter]")
-	except:
-		exitError(conn, "Could not create directories")	
+	createDirs(conn,netID,piID,isPI,uidNumber,gidNumber)
 	
 	# Do checks
 	id_test = testUser(f"id {netID}").replace("\n","")
@@ -453,7 +460,9 @@ def main():
 	input("\nLogin to hn01 [Enter]")
 	input("ssh to sn01 [Enter]")
 	input("Login as root [Enter]")
-	input("Run all the commands from: time python3 slurm-update-auth-fast.py [Enter]")
+	for cmd in getSLURMcommands():
+		input(f"Run {cmd} [Enter]")
+	input("Re-check that this doesn't give anything now: python3 slurm-update-auth-fast.py [Enter]")
 
 	# Check the user account
 	print("\nLogin as root in login node. Then:")
@@ -470,14 +479,16 @@ def main():
 	os.remove(fin_name)
 
 	# Set home directory quota
-	input("Go to https://qfs2.rcc.mcw.edu/login?next=%2Fquotas (include mcwcorp\) [Enter]")
+	secret_line1 = myldaplib.readJSON(json_file,"secret_line1")
+	input(secret_line1)
 	input(f"Add homefs/{netID}/ with 100GB [Enter]")
 
 	if netID==piID:
 		input(f"Add groupfs/{piID} with 1TB [Enter]")
-		input("Mount SMB qfs2 (use mcwcorp\) [Enter]")
+		input("Mount SMB qfs2 (use mcwcorp) [Enter]")
 		input(f"Go to KeePass and get the password for admin in Storage > qfs1 nvme. Do not close KeePass. [Enter]")
-		input("Go to https://141.106.222.221/quotas [Enter]")
+		secret_line2 = myldaplib.readJSON(json_file,"secret_line2")
+		input(secret_line2)
 		print("Now you can close KeePass")
 		input(f"Create quota for scratchfs/g/{piID} with 5TB")
 
