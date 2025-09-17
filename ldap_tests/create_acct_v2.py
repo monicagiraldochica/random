@@ -461,7 +461,7 @@ def main():
 	input("ssh to sn01 [Enter]")
 	input("Login as root [Enter]")
 	for cmd in getSLURMcommands():
-		input(f"Run {cmd} [Enter]")
+		input(f"Run: {cmd} [Enter]")
 	input("Re-check that this doesn't give anything now: python3 slurm-update-auth-fast.py [Enter]")
 
 	# Check the user account
@@ -470,9 +470,9 @@ def main():
 	print("mydisks")
 	print("myaccts")
 	print("exit")
-	fin_name = input("file where the output of previous commands are copy pasted: ")
-	if not os.path.isfile(fin_name):
-		exitError(conn, f"{fin_name} does not exist")
+	fin_name = input("File where the output of previous commands are copy pasted: ")
+	while not os.path.isfile(fin_name):
+		fin_name = input(f"{fin_name} does not exist. Correct file name: ")
 	fin = open(fin_name, 'r')
 	userTest = fin.read()
 	fin.close()
@@ -484,21 +484,21 @@ def main():
 	input(f"Add homefs/{netID}/ with 100GB [Enter]")
 
 	if netID==piID:
-		input(f"Add groupfs/{piID} with 1TB [Enter]")
+		input(f"Add groupfs/{piID}/ with 1TB [Enter]")
 		input("Mount SMB qfs2 (use mcwcorp) [Enter]")
 		input(f"Go to KeePass and get the password for admin in Storage > qfs1 nvme. Do not close KeePass. [Enter]")
 		secret_line2 = myldaplib.readJSON(json_file,"secret_line2")
 		input(secret_line2)
 		print("Now you can close KeePass")
-		input(f"Create quota for scratchfs/g/{piID} with 5TB")
+		input(f"Create quota for scratchfs/g/{piID}/ with 5TB")
 
 	# Send email
 	file1 = open("email_newAcct.txt","r")
 	email_content = file1.read()
+	file1.close()
 	email_content = email_content.replace("<first_name>",first_name).replace("<netID>",netID).replace("<user_test>",userTest)
 	print("\n"+email_content)
-	file1.close()
-	input("Send email [Enter]")
+	input("Send email. Make sure to change Default Customer for the correct UserID! [Enter]")
 
 	# Unbind and close the connection
 	closeConn(conn)
