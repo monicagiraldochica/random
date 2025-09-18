@@ -6,6 +6,7 @@ __purpose__ = "Copy files to scratch before submission"
 import argparse
 import sys
 import os
+from typing import List
 
 # Functions
 def parse_args():
@@ -13,10 +14,10 @@ def parse_args():
     
     parser = argparse.ArgumentParser(description="Script to copy files to scratch before submitting a job")
     parser.add_argument("--list", type=str, required=True, help="Path to .txt file with the list of input files/folders (all ABSOLUTE paths)")
-    parser.add_argument("--slurm", type=str, required=True, help="Path to the SLURM script")
+    parser.add_argument("--slurm", type=str, required=True, help="ABSOLUTE path to the SLURM script")
     return parser.parse_args()
 
-def readInputFiles(input_list):
+def readInputFiles(input_list: str) -> List[str]:
     """Read list of input files."""
     
     # Perform checks
@@ -41,6 +42,24 @@ def readInputFiles(input_list):
             paths.append(path)
 
     return paths
+
+def checkScript(script: str) -> bool:
+    """Check SLURM script."""
+
+    if not os.path.exists(input_list):
+        raise FileNotFoundError(f"File '{script}' does not exist")
+    if not os.path.isabs(path):
+        raise ValueError(f"Path '{path}' is not an absolute path")
+
+    with open(input_list, "r") as f:
+        for line in f:
+            path = line.strip()
+            if not path or not line.startswith("#SBATCH"):
+                continue
+
+            print(line)
+
+    return True
 
 # Main code
 def main():
