@@ -155,10 +155,10 @@ def printLDAPdic(dn,attributes):
 def createGroup(ldap_setup,piID,gidNumber,dry_run,conn):
 	dn = f"cn=sg-{piID},ou=Labs,ou=Groups,{ldap_setup}"
 	attributes = {
-		'objectClass': ['top', 'posixGroup'],
+		'objectClass': ['top', 'posixGroup','groupOfNames'],
 		'cn': f"sg-{piID}",
 		'gidNumber': gidNumber,
-		'memberUid': piID
+		'member': f"uid={piID},ou=Users,{ldap_setup}"
 		}
 
 	if not dry_run:
