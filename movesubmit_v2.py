@@ -13,8 +13,8 @@ def parse_args():
     """Parse command-line arguments and return them."""
     
     parser = argparse.ArgumentParser(description="Script to copy files to scratch before submitting a job")
-    parser.add_argument("--list", type=str, required=True, help="Path to .txt file with the list of input files/folders (all ABSOLUTE paths)")
-    parser.add_argument("--slurm", type=str, required=True, help="ABSOLUTE path to the SLURM script")
+    parser.add_argument("--list", type=str, required=True, help="Path to .txt file with the list of input files/folders")
+    parser.add_argument("--slurm", type=str, required=True, help="Path to the SLURM script")
     return parser.parse_args()
 
 def readInputFiles(input_list: str) -> List[str]:
@@ -37,27 +37,28 @@ def readInputFiles(input_list: str) -> List[str]:
 
             if not os.path.exists(path):
                 raise FileNotFoundError(f"Path '{path}' does not exist")
-            if not os.path.isabs(path):
-                raise ValueError(f"Path '{path}' is not an absolute path")
             paths.append(path)
 
     return paths
 
+def checkJobName(jobName: str) -> bool:
+    return True
+
 def checkScript(script: str) -> bool:
     """Check SLURM script."""
 
-    if not os.path.exists(input_list):
+    if not os.path.exists(script):
         raise FileNotFoundError(f"File '{script}' does not exist")
-    if not os.path.isabs(path):
-        raise ValueError(f"Path '{path}' is not an absolute path")
 
-    with open(input_list, "r") as f:
+    with open(script, "r") as f:
         for line in f:
-            path = line.strip()
-            if not path or not line.startswith("#SBATCH"):
+            line = line.strip()
+            if not line or not line.startswith("#SBATCH"):
                 continue
 
-            print(line)
+            if line.startswith("#SBATCH --job-name=") and not checkJobName(line.replace("#SBATCH --job-name=","")):
+                print(f"Bad job name in line: {line}")
+                return False
 
     return True
 
@@ -72,6 +73,9 @@ def main():
         if not input_files:
             raise ValueError(f"No valid paths found in input file '{input_list}'")
 
+        if not checkScript(slurm_script):
+            raise Exception("SLURM script has errors")
+
     except ValueError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
@@ -81,7 +85,7 @@ def main():
         sys.exit(1)
 
     except Exception as e:
-        print(f"Unexpected ERROR: {e}", file=sys.stderr)
+        print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
