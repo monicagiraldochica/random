@@ -72,7 +72,7 @@ def getSLURMcommands():
 
 	slurm_cmds = []
 	for line in result.split("\n"):
-		if line=="" or line.startswith("DRY RUN - ###"):
+		if line=="" or line.startswith("DRY RUN - ###") or line.startswith("remove"):
 			continue
 		slurm_cmds+=[line]
 	return slurm_cmds
@@ -127,8 +127,8 @@ def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggl
 	else:
 		return False
 
-def duplicateGroups(conn):
-	groups = myldaplib.search_posix_groups(conn)
+def duplicateGroups(conn,ldap_setup):
+	groups = myldaplib.search_posix_groups(conn,ldap_setup)
 	if not groups:
 		exitError(conn, "No posixGroup objects found.")
 
@@ -167,7 +167,7 @@ def createGroup(ldap_setup,piID,gidNumber,dry_run,conn):
 		if conn.result['result']==0:
 			print(f"Successfully created group sg-{piID}")
 
-			if not duplicateGroups(conn):
+			if not duplicateGroups(conn,ldap_setup):
 				input("No duplicate GIDs after creating group [Enter]")
 			else:
 				exitError(conn,"Duplicate GIDs found after creating group")
@@ -412,7 +412,7 @@ def main():
 		
 	# If new user is a PI and not re-enabled, get the next available gidNumber
 	elif not reEnbl:
-		groups = myldaplib.search_posix_groups(conn)
+		groups = myldaplib.search_posix_groups(conn,ldap_setup)
 		if not groups:
 			exitError(conn, "No posixGroup objects found.")
 

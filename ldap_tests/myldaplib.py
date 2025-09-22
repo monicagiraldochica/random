@@ -23,8 +23,23 @@ def connect_to_ldap(server, user, password):
         print("LDAP bind error:", e)
         return None
 
-def search_posix_groups(conn):
-    search_base = "dc=rcc,dc=mcw,dc=edu"  # Modify according to your LDAP setup
+def search_lab_members(conn,search_base):
+    search_attributes = ['cn', 'member']
+
+    groups = {}
+    for letter in string.ascii_lowercase:
+        search_filter = f"(&(objectClass=posixGroup)(cn=sg-{letter}*))"
+        entries = conn.extend.standard.paged_search(search_base, search_filter, attributes=search_attributes, paged_size=500, generator=False)
+        for entry in entries:
+            if 'attributes' in entry:
+                attrs = entry['attributes']
+                group = attrs['cn'][0]
+                members = attrs['member']
+                print(members)
+                #groups[group] = gid
+    return groups
+
+def search_posix_groups(conn,search_base):
     search_attributes = ['cn', 'gidNumber']
 
     groups = {}
