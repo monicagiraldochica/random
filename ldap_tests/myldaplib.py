@@ -35,8 +35,7 @@ def search_lab_members(conn,search_base):
                 attrs = entry['attributes']
                 group = attrs['cn'][0]
                 members = attrs['member']
-                print(members)
-                #groups[group] = gid
+                groups[group] = members
     return groups
 
 def search_posix_groups(conn,search_base):
@@ -93,8 +92,7 @@ def getgidNumber(conn,gid):
 				return gidNum
 	return None
 
-def search_posix_users(conn):
-    search_base = "dc=rcc,dc=mcw,dc=edu"  # Modify according to your LDAP setup
+def search_posix_users(conn,search_base):
     search_attributes = ['cn', 'uidNumber']
 
     users = {}

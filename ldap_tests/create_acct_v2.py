@@ -137,8 +137,8 @@ def duplicateGroups(conn,ldap_setup):
 		return True
 	return False
 
-def duplicateUsers(conn):
-	users = myldaplib.search_posix_users(conn)
+def duplicateUsers(conn,ldap_setup):
+	users = myldaplib.search_posix_users(conn,ldap_setup)
 	if not users:
 		exitError(conn, "No posixAccount objects found.")
 
@@ -200,7 +200,7 @@ def createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,d
 		if conn.result['result']==0:
 			print(f"Successfully added user {netID}")
 
-			if not duplicateUsers(conn):
+			if not duplicateUsers(conn,ldap_setup):
 				input("No duplicate UIDs found after adding user [Enter]")
 			else:
 				exitError(conn,"Duplicate UIDs found after adding user")
@@ -393,7 +393,7 @@ def main():
 
 	# Get next available UID
 	if not reEnbl:
-		users = myldaplib.search_posix_users(conn)
+		users = myldaplib.search_posix_users(conn,ldap_setup)
 		if not users:
 			exitError(conn, "No posixAccount objects found.")
 
