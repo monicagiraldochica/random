@@ -212,8 +212,8 @@ def createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,d
 		printLDAPdic(dn,attributes)
 
 def addUserToGroup(ldap_setup,piID,netID,dry_run,conn):
-	dn = "cn=sg-"+piID+",ou=Labs,ou=Groups,"+ldap_setup
-	attributes = {'memberUid': [(ldap3.MODIFY_ADD, [netID])]}
+	dn = f"cn=sg-{piID},ou=Labs,ou=Groups,{ldap_setup}"
+	attributes = {'member': [(ldap3.MODIFY_ADD, [f"uid={netID},ou=Users,{ldap_setup}"])]}
 
 	if not dry_run:
 		conn.modify(dn, attributes)
@@ -227,8 +227,8 @@ def addUserToGroup(ldap_setup,piID,netID,dry_run,conn):
 		printLDAPdic(dn,attributes)
 
 def addUserToMachine(ldap_setup,machines,netID,dry_run,conn):
-	dn = "cn=sg-{machines},ou=Neurology,ou=Machines,ou=Groups,{ldap_setup}"
-	attributes = {'member': [(ldap3.MODIFY_ADD, ["uid="+netID+",ou=Users,"+ldap_setup])]}
+	dn = f"cn=sg-{machines},ou=Neurology,ou=Machines,ou=Groups,{ldap_setup}"
+	attributes = {'member': [(ldap3.MODIFY_ADD, [f"uid={netID},ou=Users,{ldap_setup}"])]}
 
 	if not dry_run:
 		conn.modify(dn, attributes)
