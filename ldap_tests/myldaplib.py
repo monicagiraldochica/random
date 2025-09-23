@@ -23,6 +23,13 @@ def connect_to_ldap(server, user, password):
         print("LDAP bind error:", e)
         return None
     
+def isMemberOfLab(conn,search_base,piID,userID):
+    for member in search_lab_members(conn,search_base,piID):
+        if member==f"uid={userID},ou=Users,{search_base}":
+            return True
+        
+    return False
+
 def search_lab_members(conn,search_base,piID):
     search_attributes = ['cn', 'member']
     search_filter = f"(&(objectClass=posixGroup)(cn=sg-{piID}))"
