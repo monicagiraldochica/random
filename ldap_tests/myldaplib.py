@@ -123,16 +123,15 @@ def search_posix_users(conn,search_base):
 
 def getUserInfo(conn,username,search_base):
     search_filter = "(objectClass=posixAccount)"
-    attributes = ['cn', 'uidNumber', 'gidNumber']
-    dic = {"uidNumber":None,"gidNumber":None}
+    attributes = ["cn", "uidNumber", "gidNumber","uid","mail"]
+    dic = {"dn":None,"uidNumber":None,"gidNumber":None,"uid":None,"mail":None}
 
     conn.search(f"ou=Users,{search_base}", search_filter, attributes=attributes)
     for entry in conn.response:
         if 'attributes' in entry:
             attributes = entry['attributes']
-            user = attributes['cn'][0]
 
-            if user==username:
+            if attributes['cn'][0]==username:
                 try:
                     uid = int(attributes['uidNumber'][0])
                     gid = int(attributes['gidNumber'][0])
@@ -140,8 +139,11 @@ def getUserInfo(conn,username,search_base):
                     uid = int(attributes['uidNumber'])
                     gid = int(attributes['gidNumber'])
 
+                dic["dn"] = entry["dn"]
                 dic["uidNumber"] = uid
                 dic["gidNumber"] = gid
+                dic["uid"] = attributes["uid"]
+                dic["mail"] = attributes["mail"]
                 break
 
     return dic

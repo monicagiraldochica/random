@@ -379,9 +379,8 @@ def main():
 			exitError(conn, f"{piID} is not a PI")
 		
 	# Check that the user is not disabled
-	disabledInfo = myldaplib.getDisabledUser(conn,netID,json_file)
 	reEnbl = False
-	if disabledInfo["uidNumber"]!=None:
+	if myldaplib.getDisabledUser(conn,netID,json_file)["uidNumber"]!=None:
 		if input(f"User {netID} is disabled. Do you whish to re-enable? [y]: ")!='y':
 			exitError(conn, f"\nInvestigate further.")
 		else:
@@ -429,6 +428,10 @@ def main():
 	# Add new user in ldap (if it's not a re-enabled user)
 	if not reEnbl:
 		createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,dry_run,conn)
+		userInfo = myldaplib.getUserInfo(conn,netID,ldap_setup)
+		printLDAPdic(userInfo.pop("dn"),userInfo)
+		if input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort [y]: ")=='y':
+			exitError(conn, "User created with errors")
 
 	# If it's not a PI, add user to the corresponding group
 	if not isPI and not reEnbl:
