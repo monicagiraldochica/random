@@ -55,13 +55,20 @@ def ssh_command(hostname, port, username, password, command):
 		return output
 
 def testUser(cmd):
+	if not os.path.isfile("ssh.json"):
+		return None
+	
 	host = myldaplib.readJSON("ssh.json","host")
 	port = myldaplib.readJSON("ssh.json","port")
 	user = input("YOUR username: ")
 	password = getpass.getpass(prompt="YOUR password: ")
+
 	return ssh_command(host, port, user, password, cmd)
 
 def getSLURMcommands():
+	if not os.path.isfile("ssh2.json"):
+		return None
+
 	host = myldaplib.readJSON("ssh2.json","host")
 	port = myldaplib.readJSON("ssh2.json","port")
 	user = myldaplib.readJSON("ssh2.json","user")
@@ -423,7 +430,10 @@ def main():
 	input("\nLogin to hn01 [Enter]")
 	input("ssh to sn01 [Enter]")
 	input("Login as root [Enter]")
-	for cmd in getSLURMcommands():
+	cmds = getSLURMcommands()
+	if not cmds:
+		exitError(conn, "Error getting the SLURM commands")
+	for cmd in cmds:
 		input(f"Run: {cmd} [Enter]")
 	input("Re-check that this doesn't give anything now: python3 slurm-update-auth-fast.py [Enter]")
 
