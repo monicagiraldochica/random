@@ -365,17 +365,17 @@ def main():
 		sys.exit("Failed to connect to LDAP server.")
 
 	# Make sure the user doesn't have an account already
-	if myldaplib.getUserInfo(conn,netID,json_file)["uidNumber"]!=None:
+	if myldaplib.getUserInfo(conn,netID,ldap_setup)["uidNumber"]!=None:
 		exitError(conn, f"User {netID} already has an account. Send the following link that contains information on how to login: https://docs.rcc.mcw.edu/user-guide/access/login/")
 
 	# Make sure the users' PI is an actual PI and already has an account (unless new user is a PI)
 	if not isPI:
-		piInfo = myldaplib.getUserInfo(conn,piID,json_file)
+		piInfo = myldaplib.getUserInfo(conn,piID,ldap_setup)
 		if piInfo["uidNumber"]==None:
 			exitError(conn, f"The PI ({piID}) doesn't have an account. Ask the PI to request an account first.")
 
 		gidNum = piInfo["gidNumber"]
-		if gidNum==None or myldaplib.getGID(conn,gidNum)!="sg-"+piID:
+		if gidNum==None or myldaplib.getGID(conn,gidNum,ldap_setup)!=f"sg-{piID}":
 			exitError(conn, f"{piID} is not a PI")
 		
 	# Check that the user is not disabled
@@ -400,14 +400,14 @@ def main():
 		uidNumber = myldaplib.find_next_available_uid(users)
 		input(f"Using UID: {uidNumber} [Enter]")
 	else:
-		uidNumber = myldaplib.getUserInfo(conn,netID,json_file)['uidNumber']
+		uidNumber = myldaplib.getUserInfo(conn,netID,ldap_setup)['uidNumber']
 		input(f"UID of re-enabled user {netID}: {uidNumber} [Enter]")
 	
 	# If new user is not a PI and not a re-enabled user, get the gidNumber of that PI
 	if not isPI and not reEnbl:
-		gidNumber = myldaplib.getgidNumber(conn,"sg-"+piID)
+		gidNumber = myldaplib.getGIDnumber(conn,f"sg-{piID}",ldap_setup)
 		if gidNumber==None:
-			exitError(conn, f"Could not find the gidNumber of sg-"+piID)
+			exitError(conn, f"Could not find the gidNumber of sg-{piID}")
 		print(f"gidNumber for sg-{piID} is {gidNumber}")
 		
 	# If new user is a PI and not re-enabled, get the next available gidNumber
@@ -419,7 +419,7 @@ def main():
 		gidNumber = myldaplib.find_next_available_gid(groups)
 		input(f"Using GID: {gidNumber} [Enter]")
 	else:
-		gidNumber = myldaplib.getUserInfo(conn,netID,json_file)['gidNumber']
+		gidNumber = myldaplib.getUserInfo(conn,netID,ldap_setup)['gidNumber']
 		input(f"GID of re-enabled group sg-{netID} is {gidNumber} [Enter]")
 
 	# If it's a PI and is not re-enabled, create new group in ldap
