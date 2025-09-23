@@ -89,7 +89,6 @@ def printHelp():
 		"--ndesktops to add user to Neurology Desktops\n" \
 		"--nsquiggles to add user to Neurology Squiggles\n" \
 		"--alt-contact to add alternative contact (for new PI accounts)\n" \
-		"--dry-run self explanatory\n" \
 		"-h or --help for this message.")
 
 def closeConn(conn):
@@ -101,7 +100,7 @@ def exitError(conn,msg):
 	closeConn(conn)
 	sys.exit()
 
-def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,dry_run,isPI):
+def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,isPI):
 	print("These are the input arguments:\n" \
 		f"NetID of the new user:{netID}.\n" \
 		f"NetID of the PI:{piID}.\n" \
@@ -111,11 +110,6 @@ def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggl
 		f"Add user to Neurology Desktops:{neuroDesktops}.\n" \
 		f"Add user to Squiggles:{neuroSquiggles}.\n" \
 		f"Alternative contact:{alt_contact}.")
-
-	if dry_run:
-		print("dry_run: True (Nothing will be modified)")
-	else:
-		print("dry_run: False")
 
 	if isPI:
 		print("New user is a PI")
@@ -152,7 +146,7 @@ def printLDAPdic(dn,attributes):
 	for key,val in attributes.items():
 		print(f"{key}: {val}")
 
-def createGroup(ldap_setup,piID,gidNumber,dry_run,conn):
+def createGroup(ldap_setup,piID,gidNumber,conn):
 	dn = f"cn=sg-{piID},ou=Labs,ou=Groups,{ldap_setup}"
 	attributes = {
 		'objectClass': ['top', 'posixGroup','groupOfNames'],
@@ -161,22 +155,18 @@ def createGroup(ldap_setup,piID,gidNumber,dry_run,conn):
 		'member': f"uid={piID},ou=Users,{ldap_setup}"
 		}
 
-	if not dry_run:
-		conn.add(dn, attributes=attributes)
-		
-		if conn.result['result']==0:
-			print(f"Successfully created group sg-{piID}")
+	conn.add(dn, attributes=attributes)
+	if conn.result['result']==0:
+		print(f"Successfully created group sg-{piID}")
 
-			if not duplicateGroups(conn,ldap_setup):
-				input("No duplicate GIDs after creating group [Enter]")
-			else:
-				exitError(conn,"Duplicate GIDs found after creating group")
+		if not duplicateGroups(conn,ldap_setup):
+			input("No duplicate GIDs after creating group [Enter]")
 		else:
-			exitError(conn,"Failed to create group sg-{piID}: {conn.result['message']}")
+			exitError(conn,"Duplicate GIDs found after creating group")
 	else:
-		printLDAPdic(dn,attributes)
+		exitError(conn,"Failed to create group sg-{piID}: {conn.result['message']}")
 
-def createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,dry_run,conn):
+def createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,conn):
 	dn = f"uid={netID},ou=Users,{ldap_setup}"
 	attributes = {
 		'objectClass': ['top', 'shadowAccount', 'posixAccount', 'inetOrgPerson'],
@@ -194,78 +184,58 @@ def createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,d
 		'userPassword': "{SASL}"+netID+"@mcw.edu"
 		}
 
-	if not dry_run:
-		conn.add(dn, attributes=attributes)
+	conn.add(dn, attributes=attributes)
 		
-		if conn.result['result']==0:
-			print(f"Successfully added user {netID}")
+	if conn.result['result']==0:
+		print(f"Successfully added user {netID}")
 
-			if not duplicateUsers(conn,ldap_setup):
-				input("No duplicate UIDs found after adding user [Enter]")
-			else:
-				exitError(conn,"Duplicate UIDs found after adding user")
-
+		if not duplicateUsers(conn,ldap_setup):
+			input("No duplicate UIDs found after adding user [Enter]")
 		else:
-			exitError(conn,"Failed to add user {netID}: {conn.result['message']}")
+			exitError(conn,"Duplicate UIDs found after adding user")
 
 	else:
-		printLDAPdic(dn,attributes)
+		exitError(conn,"Failed to add user {netID}: {conn.result['message']}")
 
-def addUserToGroup(ldap_setup,piID,netID,dry_run,conn):
+def addUserToGroup(ldap_setup,piID,netID,conn):
 	dn = f"cn=sg-{piID},ou=Labs,ou=Groups,{ldap_setup}"
 	attributes = {'member': [(ldap3.MODIFY_ADD, [f"uid={netID},ou=Users,{ldap_setup}"])]}
 
-	if not dry_run:
-		conn.modify(dn, attributes)
-
-		if conn.result['result']==0:
-			input(f"Successfully added user {netID} to sg-{piID} group [Enter]")
-		else:
-			exitError(conn,f"Failed to add user {netID} to sg-{piID} group: {conn.result['message']}")
-
+	conn.modify(dn, attributes)
+	if conn.result['result']==0:
+		input(f"Successfully added user {netID} to sg-{piID} group [Enter]")
 	else:
-		printLDAPdic(dn,attributes)
+		exitError(conn,f"Failed to add user {netID} to sg-{piID} group: {conn.result['message']}")
 
-def addUserToMachine(ldap_setup,machines,netID,dry_run,conn):
+def addUserToMachine(ldap_setup,machines,netID,conn):
 	dn = f"cn=sg-{machines},ou=Neurology,ou=Machines,ou=Groups,{ldap_setup}"
 	attributes = {'member': [(ldap3.MODIFY_ADD, [f"uid={netID},ou=Users,{ldap_setup}"])]}
 
-	if not dry_run:
-		conn.modify(dn, attributes)
-
-		if conn.result['result']==0:
-			input(f"Successfully added user {netID} to Neurology Desktops [Enter]")
-		else:
-			exitError(conn, f"Failed to add user {netID} to Neurology Desktops: {conn.result['message']}")
-
+	conn.modify(dn, attributes)
+	if conn.result['result']==0:
+		input(f"Successfully added user {netID} to Neurology Desktops [Enter]")
 	else:
-		printLDAPdic(dn,attributes)
+		exitError(conn, f"Failed to add user {netID} to Neurology Desktops: {conn.result['message']}")
 
-def reEnableUser(ldap_setup,netID,dry_run,conn):
+def reEnableUser(ldap_setup,netID,conn):
 	old_dn = f"uid={netID},ou=DisableUsers,{ldap_setup}"
 	new_rdn = f"uid={netID}"
 	new_superior_dn = f"ou=Users,{ldap_setup}"
 
-	if not dry_run:
-		if conn.modify_dn(old_dn, new_rdn, new_superior=new_superior_dn, delete_old_dn=True):
-			input(f"Successfully changed DN of '{old_dn}' to '{new_rdn},{new_superior_dn}' [Enter]")
-		else:
-			exitError(conn, f"Failed to change DN: {conn.result}")
+	if conn.modify_dn(old_dn, new_rdn, new_superior=new_superior_dn, delete_old_dn=True):
+		input(f"Successfully changed DN of '{old_dn}' to '{new_rdn},{new_superior_dn}' [Enter]")
 	else:
-		print(f"old_dn: {old_dn}\nnew_dn: {new_rdn},{new_superior_dn}")
+		exitError(conn, f"Failed to change DN: {conn.result}")
 
-def reEnableGroup(ldap_setup,piID,dry_run,conn):
+def reEnableGroup(ldap_setup,piID,conn):
 	old_dn = f"cn=sg-{piID},ou=DisableGroups,{ldap_setup}"
 	new_rdn = f"cn=sg-{piID}"
 	new_superior_dn = f"ou=Labs,ou=Groups,{ldap_setup}"
 
-	if not dry_run:
-		if conn.modify_dn(old_dn, new_rdn, new_superior=new_superior_dn, delete_old_dn=True):
-			input(f"Successfully changed DN of '{old_dn}' to '{new_rdn},{new_superior_dn}' [Enter]")
-		else:
-			exitError(conn, f"Failed to change DN: {conn.result}")
+	if conn.modify_dn(old_dn, new_rdn, new_superior=new_superior_dn, delete_old_dn=True):
+		input(f"Successfully changed DN of '{old_dn}' to '{new_rdn},{new_superior_dn}' [Enter]")
 	else:
-		print(f"old_dn: {old_dn}\nnew_dn: {new_rdn},{new_superior_dn}")
+		exitError(conn, f"Failed to change DN: {conn.result}")
 
 def main():
 	# Read arguments
@@ -277,11 +247,10 @@ def main():
 	neuroDesktops = False
 	neuroSquiggles = False
 	alt_contact = None
-	dry_run = False
 	
 	argv = sys.argv[1:]
 	try:
-		opts, args = getopt.getopt(argv, "u:p:h:f:l:e:", ["user=", "pi=", "help", "first=", "last=", "email=", "ndesktops", "nsquiggles", "alt-contact=", "dry-run"])
+		opts, args = getopt.getopt(argv, "u:p:h:f:l:e:", ["user=", "pi=", "help", "first=", "last=", "email=", "ndesktops", "nsquiggles", "alt-contact="])
 	except:
 		printHelp()
 		sys.exit("Error reading arguments")
@@ -306,8 +275,6 @@ def main():
 			neuroSquiggles = True
 		elif opt in ["--alt-contact"]:
 			alt_contact = arg.strip()
-		elif opt in ["--dry-run"]:
-			dry_run = True
 
 	if netID==None:
 		netID = input("netID of the new user: ").strip()
@@ -345,7 +312,7 @@ def main():
 	first_name = re.sub(r'[^a-zA-Z0-9\s]', '', first_name)
 	last_name = last_name.capitalize()
 	last_name = re.sub(r'[^a-zA-Z0-9\s]', '', last_name)
-	if not confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,dry_run,isPI):
+	if not confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,isPI):
 		sys.exit("Correct arguments & re-run the script. Exiting.")
 
 	# Check that the PI is an actual PI
@@ -385,8 +352,8 @@ def main():
 			exitError(conn, f"\nInvestigate further.")
 		else:
 			if isPI:
-				reEnableGroup(ldap_setup,piID,dry_run,conn)
-			reEnableUser(ldap_setup,netID,dry_run,conn)
+				reEnableGroup(ldap_setup,piID,conn)
+			reEnableUser(ldap_setup,netID,conn)
 			reEnbl = True
 	print("\n")
 
@@ -423,11 +390,11 @@ def main():
 
 	# If it's a PI and is not re-enabled, create new group in ldap
 	if isPI and not reEnbl:
-		createGroup(ldap_setup,piID,gidNumber,dry_run,conn)
+		createGroup(ldap_setup,piID,gidNumber,conn)
 
 	# Add new user in ldap (if it's not a re-enabled user)
 	if not reEnbl:
-		createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,dry_run,conn)
+		createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,conn)
 		userInfo = myldaplib.getUserInfo(conn,netID,ldap_setup)
 		printLDAPdic(userInfo.pop("dn"),userInfo)
 		if input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort [y]: ")=='y':
@@ -438,19 +405,16 @@ def main():
 		if myldaplib.isMemberOfLab(conn,ldap_setup,piID,netID):
 			exitError(conn, f"{netID} is already a member of sg-{piID}. This doesn't make sense since it's a new user.")
 		else:
-			addUserToGroup(ldap_setup,piID,netID,dry_run,conn)
+			addUserToGroup(ldap_setup,piID,netID,conn)
 			if not myldaplib.isMemberOfLab(conn,ldap_setup,piID,netID):
 				exitError(conn, f"{netID} doesn't appear in the list of members for sg-{piID}. Check LDAP.")
 
 	# Add to department machine if they ask so
 	if neuroDesktops:
-		addUserToMachine(ldap_setup,"neurology-desktops",netID,dry_run,conn)
+		addUserToMachine(ldap_setup,"neurology-desktops",netID,conn)
 		
 	if neuroSquiggles:
-		addUserToMachine(ldap_setup,"neurology-squiggles",netID,dry_run,conn)
-
-	if dry_run:
-		exit("The rest of the script can't run in dry_run")
+		addUserToMachine(ldap_setup,"neurology-squiggles",netID,conn)
 
 	# Create directories and give permissions
 	createDirs(conn,netID,piID,isPI,uidNumber,gidNumber)
