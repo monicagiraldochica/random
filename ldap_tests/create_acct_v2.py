@@ -466,6 +466,8 @@ def main():
 		input(f"Create quota for scratchfs/g/{piID}/ with 5TB")
 
 	# Send email
+	if not os.path.isfile("email_newAcct.txt"):
+		exitError(conn, "Could not find email_newAcct.txt")
 	file1 = open("email_newAcct.txt","r")
 	email_content = file1.read()
 	file1.close()
