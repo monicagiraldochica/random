@@ -133,17 +133,21 @@ def getUserInfo(conn,username,search_base):
 
             if attributes['cn'][0]==username:
                 try:
-                    uid = int(attributes['uidNumber'][0])
-                    gid = int(attributes['gidNumber'][0])
+                    uidNum = int(attributes['uidNumber'][0])
+                    gidNum = int(attributes['gidNumber'][0])
+                    uid = attributes["uid"][0]
+                    mail = attributes["mail"][0]
                 except:
-                    uid = int(attributes['uidNumber'])
-                    gid = int(attributes['gidNumber'])
+                    uidNum = int(attributes['uidNumber'])
+                    gidNum = int(attributes['gidNumber'])
+                    uid = attributes["uid"]
+                    mail = attributes["mail"]
 
                 dic["dn"] = entry["dn"]
-                dic["uidNumber"] = uid
-                dic["gidNumber"] = gid
-                dic["uid"] = attributes["uid"]
-                dic["mail"] = attributes["mail"]
+                dic["uidNumber"] = uidNum
+                dic["gidNumber"] = gidNum
+                dic["uid"] = uid
+                dic["mail"] = mail
                 break
 
     return dic

@@ -148,9 +148,9 @@ def duplicateUsers(conn,ldap_setup):
 	return False
 
 def printLDAPdic(dn,attributes):
-	print(f"dn: {dn}\nattributes:")
+	print(f"dn: {dn}\n\nattributes:")
 	for key,val in attributes.items():
-		print(f"{key}: {val}\n")
+		print(f"{key}: {val}")
 
 def createGroup(ldap_setup,piID,gidNumber,dry_run,conn):
 	dn = f"cn=sg-{piID},ou=Labs,ou=Groups,{ldap_setup}"
@@ -435,7 +435,12 @@ def main():
 
 	# If it's not a PI, add user to the corresponding group
 	if not isPI and not reEnbl:
-		addUserToGroup(ldap_setup,piID,netID,dry_run,conn)
+		if myldaplib.isMemberOfLab(conn,ldap_setup,piID,netID):
+			exitError(conn, f"{netID} is already a member of sg-{piID}. This doesn't make sense since it's a new user.")
+		else:
+			addUserToGroup(ldap_setup,piID,netID,dry_run,conn)
+			if not myldaplib.isMemberOfLab(conn,ldap_setup,piID,netID):
+				exitError(conn, f"{netID} doesn't appear in the list of members for sg-{piID}. Check LDAP.")
 
 	# Add to department machine if they ask so
 	if neuroDesktops:
@@ -450,15 +455,6 @@ def main():
 	# Create directories and give permissions
 	createDirs(conn,netID,piID,isPI,uidNumber,gidNumber)
 	
-	# Do checks
-	id_test = testUser(f"id {netID}").replace("\n","")
-	if id_test==None:
-		input(f"Check: id {netID} [Enter]")
-	else:
-		print(f"id {netID}: {id_test}")
-		if not id_test==f"uid={uidNumber}({netID}) gid={gidNumber}(sg-{piID})" and input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort [y]: ")=='y':
-			exitError(conn, "id test not passed")
-
 	# Put user in SLURM scheduler
 	input("\nLogin to hn01 [Enter]")
 	input("ssh to sn01 [Enter]")
