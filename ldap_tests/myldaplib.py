@@ -135,19 +135,15 @@ def getUserInfo(conn,username,search_base):
                 try:
                     uidNum = int(attributes['uidNumber'][0])
                     gidNum = int(attributes['gidNumber'][0])
-                    uid = attributes["uid"][0]
-                    mail = attributes["mail"][0]
                 except:
                     uidNum = int(attributes['uidNumber'])
                     gidNum = int(attributes['gidNumber'])
-                    uid = attributes["uid"]
-                    mail = attributes["mail"]
 
                 dic["dn"] = entry["dn"]
                 dic["uidNumber"] = uidNum
                 dic["gidNumber"] = gidNum
-                dic["uid"] = uid
-                dic["mail"] = mail
+                dic["uid"] = attributes["uid"][0]
+                dic["mail"] = attributes["mail"][0]
                 break
 
     return dic
