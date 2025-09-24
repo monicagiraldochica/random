@@ -79,7 +79,7 @@ def getSLURMcommands():
 
 	slurm_cmds = []
 	for line in result.split("\n"):
-		if line=="" or line.startswith("DRY RUN - ###") or line.startswith("remove"):
+		if line=="" or line.startswith("DRY RUN - ###"):
 			continue
 		slurm_cmds+=[line]
 	return slurm_cmds
