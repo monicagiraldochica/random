@@ -21,7 +21,13 @@ parse_args() {
 		case $opt in
 			h) printhelp;;
 			n) nlines=$OPTARG;;
-			f) searchdir=$OPTARG;;
+			f) 
+				searchdir=$OPTARG
+				# Remove trailing backslash if present
+				if [[ "${searchdir: -1}" == '/' ]]; then
+					searchdir="${searchdir::-1}"
+				fi
+				;;
 			\?) echo "Invalid option: -$OPTARG" >&2; exit 1;;
 			:) echo "Option -$OPTARG requires an argument." >&2; exit 1;;
 		esac
@@ -31,7 +37,7 @@ parse_args() {
 ## Main code
 parse_args "$@"
 
-find "$searchdir" -mindepth 1 -maxdepth 1 \( -name ".*" -o -name "*" \) -exec sh -c '
+find "${searchdir}" -mindepth 1 -maxdepth 1 \( -name ".*" -o -name "*" \) -exec sh -c '
   for path do
     size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
     owner=$(stat -c "%U" "$path")
