@@ -26,12 +26,10 @@ def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber,reEnbl):
 			if not isPI:
 				break
 
-		if reEnbl:
-			break
-
-		for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
-			shutil.copy(f"/adminfs/skel/{fname}",list(dic.keys())[0])
-		input(f"{list(dic.keys())[0]} successfully populated [Enter]")
+		if not reEnbl:
+			for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
+				shutil.copy(f"/adminfs/skel/{fname}",list(dic.keys())[0])
+			input(f"{list(dic.keys())[0]} successfully populated [Enter]")
 
 	except:
 		exitError(conn, "Could not create directories")
@@ -111,7 +109,7 @@ def exitError(conn,msg):
 	sys.exit()
 
 def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,isPI):
-	print("These are the input arguments:\n" \
+	print("\nThese are the input arguments:\n" \
 		f"NetID of the new user:{netID}.\n" \
 		f"NetID of the PI:{piID}.\n" \
 		f"First name of the new user:{first_name}.\n" \
