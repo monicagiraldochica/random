@@ -10,7 +10,7 @@ import getpass
 from googlesearch import search
 import re
 
-def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber):
+def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber,reEnbl):
 	try:
 		dic = {f"/qumulo_homefs/{netID}/":[700,uidNumber,gidNumber],
 			f"/group/{piID}/":[755,"root",f"sg-{piID}"],
@@ -25,6 +25,9 @@ def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber):
 
 			if not isPI:
 				break
+
+		if reEnbl:
+			break
 
 		for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
 			shutil.copy(f"/adminfs/skel/{fname}",list(dic.keys())[0])
@@ -79,7 +82,7 @@ def getSLURMcommands():
 
 	slurm_cmds = []
 	for line in result.split("\n"):
-		if line=="" or line.startswith("DRY RUN - ###"):
+		if line=="" or line.startswith("DRY RUN - ###") or line.startswith("remove"):
 			continue
 		slurm_cmds+=[line]
 	return slurm_cmds
@@ -376,8 +379,8 @@ def main():
 		uidNumber = myldaplib.getUserInfo(conn,netID,ldap_setup)['uidNumber']
 		input(f"UID of re-enabled user {netID}: {uidNumber} [Enter]")
 	
-	# If new user is not a PI and not a re-enabled user, get the gidNumber of that PI
-	if not isPI and not reEnbl:
+	# If new user is not a PI, get the gidNumber of his/her PI
+	if not isPI:
 		gidNumber = myldaplib.getGIDnumber(conn,f"sg-{piID}",ldap_setup)
 		if gidNumber==None:
 			exitError(conn, f"Could not find the gidNumber of sg-{piID}")
@@ -391,6 +394,8 @@ def main():
 
 		gidNumber = myldaplib.find_next_available_gid(groups)
 		input(f"Using GID: {gidNumber} [Enter]")
+
+	# If new user is a re-enabled PI
 	else:
 		gidNumber = myldaplib.getUserInfo(conn,netID,ldap_setup)['gidNumber']
 		input(f"GID of re-enabled group sg-{netID} is {gidNumber} [Enter]")
@@ -407,10 +412,13 @@ def main():
 		if input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort [y]: ")=='y':
 			exitError(conn, "User created with errors")
 
-	# If it's not a PI, add user to the corresponding group
-	if not isPI and not reEnbl:
+	# If it's not a PI, add user to the new group
+	if not isPI:
 		if myldaplib.isMemberOfLab(conn,ldap_setup,piID,netID):
-			exitError(conn, f"{netID} is already a member of sg-{piID}. This doesn't make sense since it's a new user.")
+			if reEnbl:
+				print(f"{netID} was already a member of sg-{piID}.")
+			else:
+				exitError(conn, f"{netID} is already a member of sg-{piID}. This doesn't make sense since it's a new user.")
 		else:
 			addUserToGroup(ldap_setup,piID,netID,conn)
 			if not myldaplib.isMemberOfLab(conn,ldap_setup,piID,netID):
@@ -424,7 +432,7 @@ def main():
 		addUserToMachine(ldap_setup,"neurology-squiggles",netID,conn)
 
 	# Create directories and give permissions
-	createDirs(conn,netID,piID,isPI,uidNumber,gidNumber)
+	createDirs(conn,netID,piID,isPI,uidNumber,gidNumber,reEnbl)
 	
 	# Put user in SLURM scheduler
 	input("\nLogin to hn01 [Enter]")
@@ -452,18 +460,19 @@ def main():
 	os.remove(fin_name)
 
 	# Set home directory quota
-	secret_line1 = myldaplib.readJSON(json_file,"secret_line1")
-	input(secret_line1)
-	input(f"Add homefs/{netID}/ with 100GB [Enter]")
+	if not reEnbl:
+		secret_line1 = myldaplib.readJSON(json_file,"secret_line1")
+		input(secret_line1)
+		input(f"Add homefs/{netID}/ with 100GB [Enter]")
 
-	if netID==piID:
-		input(f"Add groupfs/{piID}/ with 1TB [Enter]")
-		input("Mount SMB qfs2 (use mcwcorp) [Enter]")
-		input(f"Go to KeePass and get the password for admin in Storage > qfs1 nvme. Do not close KeePass. [Enter]")
-		secret_line2 = myldaplib.readJSON(json_file,"secret_line2")
-		input(secret_line2)
-		print("Now you can close KeePass")
-		input(f"Create quota for scratchfs/g/{piID}/ with 5TB")
+		if netID==piID:
+			input(f"Add groupfs/{piID}/ with 1TB [Enter]")
+			input("Mount SMB qfs2 (use mcwcorp) [Enter]")
+			input(f"Go to KeePass and get the password for admin in Storage > qfs1 nvme. Do not close KeePass. [Enter]")
+			secret_line2 = myldaplib.readJSON(json_file,"secret_line2")
+			input(secret_line2)
+			print("Now you can close KeePass")
+			input(f"Create quota for scratchfs/g/{piID}/ with 5TB")
 
 	# Send email
 	if not os.path.isfile("email_newAcct.txt"):
