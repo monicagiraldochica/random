@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "adminfs",
+        "dotglob",
         "Enbl",
         "gecos",
         "gids",
@@ -14,12 +15,16 @@
         "myldaplib",
         "ndesktops",
         "neuro",
+        "nlines",
         "nsquiggles",
         "nvme",
         "Pdic",
+        "printhelp",
         "qumulo",
         "scratchfs",
+        "searchdir",
         "skel",
+        "subfolders",
         "uids"
     ]
 }

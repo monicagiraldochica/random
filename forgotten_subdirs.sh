@@ -41,10 +41,10 @@ parse_args "$@"
 shopt -s dotglob
 
 # Array to store results
-declare -a oldest_dirs
+#declare -a oldest_dirs
 
 # Loop over all top-level folders, including hidden
-for dir in "${searchdir}/*"; do
+for dir in ${searchdir}/*; do
 	# Skip "." and ".."
 	if [ "$dir" = "$searchdir/." ] || [ "$dir" = "$searchdir/.." ]; then
 		continue
