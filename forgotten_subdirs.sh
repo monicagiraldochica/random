@@ -37,41 +37,23 @@ parse_args() {
 ## Main code
 parse_args "$@"
 
-# Enable dotglob to include hidden files/folders in globbing
+# Include hidden files/folders in globbing
 shopt -s dotglob
 
-# Array to store results
-#declare -a oldest_dirs
-
-# Loop over all top-level folders, including hidden
-for dir in ${searchdir}/*; do
-	# Skip "." and ".."
-	if [ "$dir" = "$searchdir/." ] || [ "$dir" = "$searchdir/.." ]; then
-		continue
-	fi
-
-	echo -e "${dir}\n"
+for dir in "$searchdir"/*/; do
+	[ -d "$dir" ] || continue   # skip if not a directory
 
 	# Find the oldest access time among files inside the directory
-	#newest_access=$(find "$dir" -type f -printf '%A@ %p\n' 2>/dev/null | sort -n | head -n1 | awk '{print $1}')
+	newest_access=$(find "$dir" -type f -printf '%A@ %p\n' 2>/dev/null | sort -n | head -n1 | awk '{print $1}')
 
 	# If the directory has no files, fallback to directory's own access time
-	#if [ -z "$newest_access" ]; then
-        #	newest_access=$(stat -c %X "$dir")
-    	#fi
+	[ -z "$newest_access" ] && newest_access=$(stat -c %X "$dir")
 
-	# Store access time and directory path in the array
-    	#oldest_dirs+=("$newest_access $dir")
+	# Convert access time to human-readable format
+	newest_access=$(date -d @"$newest_access" '+%Y-%m-%d %H:%M:%S')
+	
+	echo "${dir} was last accessed on ${newest_access}"
 done
 
 # Disable dotglob to restore default behavior
 shopt -u dotglob
-
-# Sort by access time (oldest first) and take only the top $nlines
-#for entry in $(printf "%s\n" "${oldest_dirs[@]}" | sort -n | head -n "$nlines"); do
-    	#echo $entry
-	#ts=$(echo "$entry" | awk '{print $1}')
-    	#dir=$(echo "$entry" | awk '{print $2}')
-    	# Print human-readable date and directory
-    	#echo -e "$(date -d @"$ts" '+%Y-%m-%d %H:%M:%S')\t$dir"
-#done
