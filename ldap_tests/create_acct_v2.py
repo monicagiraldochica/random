@@ -57,7 +57,7 @@ def ssh_command(hostname, port, username, password, command):
 
 def testUser(cmd):
 	if not os.path.isfile("ssh.json"):
-		return None
+		raise FileNotFoundError("ssh.json not found")
 	
 	host = myldaplib.readJSON("ssh.json","host")
 	port = myldaplib.readJSON("ssh.json","port")
@@ -68,21 +68,23 @@ def testUser(cmd):
 
 def getSLURMcommands():
 	if not os.path.isfile("ssh2.json"):
-		return None
+		raise FileNotFoundError("ssh2.json not found")
 
 	host = myldaplib.readJSON("ssh2.json","host")
 	port = myldaplib.readJSON("ssh2.json","port")
 	user = myldaplib.readJSON("ssh2.json","user")
 	password = myldaplib.readJSON("ssh2.json","password")
+	slurm_cmds = []
+
 	result = ssh_command(host, port, user, password, "python3 slurm-update-auth-fast.py")
 	if result==None:
-		return None
+		return slurm_cmds
 
-	slurm_cmds = []
 	for line in result.split("\n"):
 		if line=="" or line.startswith("DRY RUN - ###") or line.startswith("remove"):
 			continue
 		slurm_cmds+=[line]
+		
 	return slurm_cmds
 
 def printHelp():
@@ -323,6 +325,10 @@ def main():
 	if not confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,isPI):
 		sys.exit("Correct arguments & re-run the script. Exiting.")
 
+	# Check that the id is correct in Active directory
+	if input(f"Is the netID {netID} for {first_name} {last_name} correct in Active Directory? [y]: ")!='y':
+		netID = input("Correct netID: ")
+
 	# Check that the PI is an actual PI
 	if isPI:
 		print(f"Check the following links to confirm that {first_name} {last_name} is a PI at MCW:")
@@ -436,12 +442,18 @@ def main():
 	input("\nLogin to hn01 [Enter]")
 	input("ssh to sn01 [Enter]")
 	input("Login as root [Enter]")
-	cmds = getSLURMcommands()
-	if not cmds:
-		exitError(conn, "Error getting the SLURM commands")
-	for cmd in cmds:
-		input(f"Run: {cmd} [Enter]")
-	input("Re-check that this doesn't give anything now: python3 slurm-update-auth-fast.py [Enter]")
+	try:
+		for cmd in getSLURMcommands():
+			input(f"Run: {cmd} [Enter]")
+		
+		remaining = getSLURMcommands()
+		if len(remaining)==0:
+			print("no more commands to run")
+		else:
+			print(f"There are still some commands that need to run: {",".join(remaining)}")
+			input("Re-check that this doesn't give anything now: python3 slurm-update-auth-fast.py [Enter]")
+	except FileNotFoundError as e:
+		exitError(conn, e)
 
 	# Check the user account
 	print("\nLogin as root in login node. Then:")
