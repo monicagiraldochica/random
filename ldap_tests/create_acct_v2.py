@@ -17,6 +17,7 @@ def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber,reEnbl):
 			f"/group/{piID}/work":[2770,"root",f"sg-{piID}"],
 			f"/scratch/g/{piID}":[2770,"root",f"sg-{piID}"]}
 
+		print("\nCreating directories:")
 		for newdir,array in dic.items():
 			os.system(f"mkdir {newdir}")
 			os.system(f"chmod {array[0]} {newdir}")
@@ -81,7 +82,7 @@ def getSLURMcommands():
 		return slurm_cmds
 
 	for line in result.split("\n"):
-		if line=="" or line.startswith("DRY RUN - ###") or line.startswith("remove"):
+		if line=="" or line.startswith("DRY RUN - ###") or line.startswith("sacctmgr remove"):
 			continue
 		slurm_cmds+=[line]
 		
@@ -152,7 +153,7 @@ def duplicateUsers(conn,ldap_setup):
 	return False
 
 def printLDAPdic(dn,attributes):
-	print(f"dn: {dn}\n\nattributes:")
+	print(f"\ndn: {dn}\nattributes:")
 	for key,val in attributes.items():
 		print(f"{key}: {val}")
 
@@ -213,7 +214,7 @@ def addUserToGroup(ldap_setup,piID,netID,conn):
 
 	conn.modify(dn, attributes)
 	if conn.result['result']==0:
-		input(f"Successfully added user {netID} to sg-{piID} group [Enter]")
+		input(f"\nSuccessfully added user {netID} to sg-{piID} group [Enter]")
 	else:
 		exitError(conn,f"Failed to add user {netID} to sg-{piID} group: {conn.result['message']}")
 
@@ -326,7 +327,7 @@ def main():
 		sys.exit("Correct arguments & re-run the script. Exiting.")
 
 	# Check that the id is correct in Active directory
-	if input(f"Is the netID {netID} for {first_name} {last_name} correct in Active Directory? [y]: ")!='y':
+	if input(f"Is the netID '{netID}' for '{first_name} {last_name}' correct in Active Directory? [y]: ")!='y':
 		netID = input("Correct netID: ")
 
 	# Check that the PI is an actual PI
@@ -420,7 +421,7 @@ def main():
 	if not isPI:
 		if myldaplib.isMemberOfLab(conn,ldap_setup,piID,netID):
 			if reEnbl:
-				print(f"{netID} was already a member of sg-{piID}.")
+				print(f"\n{netID} was already a member of sg-{piID}.")
 			else:
 				exitError(conn, f"{netID} is already a member of sg-{piID}. This doesn't make sense since it's a new user.")
 		else:
@@ -450,8 +451,8 @@ def main():
 		if len(remaining)==0:
 			print("no more commands to run")
 		else:
-			print("There are still some commands that need to run: "+",".join(remaining))
-			input("Re-check that this doesn't give anything now: python3 slurm-update-auth-fast.py [Enter]")
+			print("There are still some commands that need to run: "+", ".join(remaining))
+			input("Run the commands that still need to be run and re-check the output of python3 slurm-update-auth-fast.py [Enter]")
 	except FileNotFoundError as e:
 		exitError(conn, e)
 
@@ -472,7 +473,7 @@ def main():
 	# Set home directory quota
 	if not reEnbl:
 		secret_line1 = myldaplib.readJSON(json_file,"secret_line1")
-		input(secret_line1)
+		input(f"\nSet directory quota:\n{secret_line1}")
 		input(f"Add homefs/{netID}/ with 100GB [Enter]")
 
 		if netID==piID:
