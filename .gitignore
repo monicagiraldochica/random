@@ -3,3 +3,4 @@
 ldap_tests/*.json
 ldap_tests/email_newAcct.txt
 ldap_tests/__pycache__
+software-list-generator/
