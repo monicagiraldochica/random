@@ -450,7 +450,7 @@ def main():
 		if len(remaining)==0:
 			print("no more commands to run")
 		else:
-			print(f"There are still some commands that need to run: {",".join(remaining)}")
+			print("There are still some commands that need to run: "+",".join(remaining))
 			input("Re-check that this doesn't give anything now: python3 slurm-update-auth-fast.py [Enter]")
 	except FileNotFoundError as e:
 		exitError(conn, e)
