@@ -5,11 +5,11 @@ __purpose__ = "Install R packages"
 
 import os
 
-os.chdir("/scratch/g/rccadmin/mkeith/R")
+os.chdir("/group/rccadmin/work/mkeith/R")
 v_new = "4.5.0"
 v_old = "4.4.2"
 
-# Get the list of missing packages
+# Get the list of packages in the new version
 # Opening in write mode will empty it's previous content if file exist
 fnew = open(v_new+".txt",'w')
 for item in sorted(os.listdir("/hpc/apps/R/"+v_new+"/lib64/R/library/"), key=str.casefold):
@@ -17,12 +17,14 @@ for item in sorted(os.listdir("/hpc/apps/R/"+v_new+"/lib64/R/library/"), key=str
 		_ = fnew.write(item+"\n")
 fnew.close()
 
+# Get the list of packages in the old version
 fold = open(v_old+".txt",'w')
 for item in sorted(os.listdir("/hpc/apps/R/"+v_old+"/lib64/R/library/"), key=str.casefold):
         if not item.startswith("00LOCK"):
                 _ = fold.write(item+"\n")
 fold.close()
 
+# Get the list of missing packages
 if os.path.exists("diff.txt"):
 	 os.remove("diff.txt")
 os.system("diff "+v_new+".txt "+v_old+".txt >> diff.txt")
