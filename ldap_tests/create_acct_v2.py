@@ -456,20 +456,6 @@ def main():
 	except FileNotFoundError as e:
 		exitError(conn, e)
 
-	# Check the user account
-	print("\nLogin as root in login node. Then:")
-	print(f"su - {netID}")
-	print("mydisks")
-	print("myaccts")
-	print("exit")
-	fin_name = input("File where the output of previous commands are copy pasted: ")
-	while not os.path.isfile(fin_name):
-		fin_name = input(f"{fin_name} does not exist. Correct file name: ")
-	fin = open(fin_name, 'r')
-	userTest = fin.read()
-	fin.close()
-	os.remove(fin_name)
-
 	# Set home directory quota
 	if not reEnbl:
 		secret_line1 = myldaplib.readJSON(json_file,"secret_line1")
@@ -491,7 +477,7 @@ def main():
 	file1 = open("email_newAcct.txt","r")
 	email_content = file1.read()
 	file1.close()
-	email_content = email_content.replace("<first_name>",first_name).replace("<netID>",netID).replace("<user_test>",userTest)
+	email_content = email_content.replace("<first_name>",first_name).replace("<netID>",netID)
 	print("\n"+email_content)
 	input("Send email. Make sure to change Default Customer for the correct UserID! [Enter]")
 
