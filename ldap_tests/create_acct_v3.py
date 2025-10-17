@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import sys 
 import getopt
 import myldaplib
@@ -87,20 +88,6 @@ def getSLURMcommands():
 		slurm_cmds+=[line]
 		
 	return slurm_cmds
-
-def printHelp():
-	print("Mandatory arguments:\n"
-		"-u newNetID or --user=newNetID for the networkID of the new user.\n" \
-		"-p piNetID or --pi=piNetID for the networkID of the PI (same as newNetID if new user is a PI)\n" \
-		"-f first_name or --first=first_name for the first name of the user\n" \
-		"-l last_name or --last=last_name for the last name of the user\n" \
-		"-e email or --email=user_email for the email of the user\n\n" \
-		
-		"Optional arguments:\n" \
-		"--ndesktops to add user to Neurology Desktops\n" \
-		"--nsquiggles to add user to Neurology Squiggles\n" \
-		"--alt-contact to add alternative contact (for new PI accounts)\n" \
-		"-h or --help for this message.")
 
 def closeConn(conn):
 	conn.unbind()
@@ -248,81 +235,70 @@ def reEnableGroup(ldap_setup,piID,conn):
 	else:
 		exitError(conn, f"Failed to change DN: {conn.result}")
 
-def main():
-	# Read arguments
-	netID = None
-	piID = None
-	first_name = None
-	last_name = None
-	email = None
-	neuroDesktops = False
-	neuroSquiggles = False
-	alt_contact = None
+def sanitize_text(value, capitalize=False):
+	"""Remove non-alphanumeric characters and normalize capitalization."""
+	if value is None:
+		return None
 	
-	argv = sys.argv[1:]
-	try:
-		opts, args = getopt.getopt(argv, "u:p:h:f:l:e:", ["user=", "pi=", "help", "first=", "last=", "email=", "ndesktops", "nsquiggles", "alt-contact="])
-	except:
-		printHelp()
-		sys.exit("Error reading arguments")
+	value = re.sub(r'[^a-zA-Z0-9\s]', '', value.strip())
 
-	for opt,arg in opts:
-		if opt in ["-u", "--user"]: 
-			netID = arg.strip()
-		elif opt in ["-p", "--pi"]:
-			piID = arg.strip()
-		elif opt in ["-h","--help"]:
-			printHelp()
-			exit()
-		elif opt in ["-f","--first"]:
-			first_name = arg.strip().capitalize()
-		elif opt in ["-l","--last"]:
-			last_name = arg.strip().capitalize()
-		elif opt in ["-e", "--email"]:
-			email = arg.strip()
-		elif opt in ["--ndesktops"]:
-			neuroDesktops = True
-		elif opt in ["--nsquiggles"]:
-			neuroSquiggles = True
-		elif opt in ["--alt-contact"]:
-			alt_contact = arg.strip()
+	if value=="":
+		return None	
+	
+	return value.capitalize() if capitalize else value
 
-	if netID==None:
-		netID = input("netID of the new user: ").strip()
-	if piID==None:
-		piID = input("netID of the PI: ").strip()
-	if first_name==None:
-		first_name = input("First name of the new user: ").strip().capitalize()
-	if last_name==None:
-		last_name = input("Last name of the new user: ").strip().capitalize()
-	if email==None:
-		email = input("Email of the new user: ").strip()
-	isPI = netID!=None and netID==piID
-	if isPI and alt_contact==None:
-		alt_contact = input("Alternative contact ([Enter if none]): ")
-		if alt_contact=="":
-			alt_contact = None
-		else:
-			alt_contact = alt_contact.strip()
+def parse_arguments():
+	# Get arguments
+	parser = argparse.ArgumentParser(description="RCC on boarding automation script")
+	parser.add_argument("--user", help="netID of the new user")
+	parser.add_argument("--pi", help="netID of the PI")
+	parser.add_argument("--first", help="First name of the new user")
+	parser.add_argument("--last", help="Last name of the new user")
+	parser.add_argument("--email", help="Email of the new user (@mcw.edu required)")
+	parser.add_argument("--ndesktops", action="store_true", help="Include NeuroDesktops access")
+	parser.add_argument("--nsquiggles", action="store_true", help="Include NeuroSquiggles access")
+	parser.add_argument("--alt-contact", help="Alternative contact email (PI only)")
+	args = parser.parse_args()
 
-	if netID==None or piID==None or first_name==None or last_name==None or email==None:
-		printHelp()
-		sys.exit("Missing arguments")
+	netID = args.user or input("netID of the new user: ")
+	piID = args.pi or input("netID of the PI: ")
+	first_name = args.first or input("First name of the new user: ")
+	last_name = args.last or input("Last name of the new user: ")
+	email = args.email or input("Email of the new user: ")
+	alt_contact = args.alt_contact
+	
+	# Clean arguments
+	netID = sanitize_text(netID)
+	piID = sanitize_text(piID)
+	first_name = sanitize_text(first_name, capitalize=True)
+	last_name = sanitize_text(last_name, capitalize=True)
+	email = sanitize_text(email)
+	alt_contact = sanitize_text(alt_contact)
+
+	# Check required fields
+	if not netID or not piID or not first_name or not last_name or not email:
+		parser.print_help()
+		sys.exit("Error: Missing arguments")
+
 	if not email.endswith("@mcw.edu"):
-		sys.exit("email must be from MCW")
-	if alt_contact!=None and not alt_contact.endswith("@mcw.edu"):
-		sys.exit("Alternative contact must be an email from MCW")
-	if alt_contact!=None and not isPI:
-		print("Alternative contact has a value, but this new account does not seem to be a new PI. This variable will be ignored.")
-		if input("Continue? [y]: ")!='y':
-			sys.exit("Exiting")
+		sys.exit("Error: email must be from MCW")
 
-	netID = re.sub(r'[^a-zA-Z0-9\s]', '', netID)
-	piID = re.sub(r'[^a-zA-Z0-9\s]', '', piID)
-	first_name = first_name.capitalize()
-	first_name = re.sub(r'[^a-zA-Z0-9\s]', '', first_name)
-	last_name = last_name.capitalize()
-	last_name = re.sub(r'[^a-zA-Z0-9\s]', '', last_name)
+	# Check optional fields
+	isPI = (netID == piID)
+	if isPI and not alt_contact:
+		alt_contact = input("Alternative contact ([Enter if none]): ")
+		if alt_contact and not alt_contact.endswith("@mcw.edu"):
+			sys.exit("Error: Alternative contact must be an MCW email")
+	elif not isPI and alt_contact:
+		print("Warning: Alternative contact provided, but user is not a PI. Ignoring input.")
+		alt_contact = None
+
+	return [ netID, piID, first_name, last_name, email, args.ndesktops, args.nsquiggles, alt_contact, isPI ]
+
+def main():
+	# Read and check arguments
+	[ netID, piID, first_name, last_name, email, neuroDesktops, neuroSquiggles, alt_contact, isPI ] = parse_arguments()
+	
 	if not confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,isPI):
 		sys.exit("Correct arguments & re-run the script. Exiting.")
 
