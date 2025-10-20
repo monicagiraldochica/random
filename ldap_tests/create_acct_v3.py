@@ -8,7 +8,6 @@ import os
 import shutil
 import paramiko
 import getpass
-from googlesearch import search
 import re
 
 def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber,reEnbl):
@@ -261,7 +260,7 @@ def parse_arguments():
 	args = parser.parse_args()
 
 	netID = args.user or input("netID of the new user: ")
-	piID = args.pi or input("netID of the PI: ")
+	piID = args.pi or input("netID of the PI (same as user if it's a PI): ")
 	first_name = args.first or input("First name of the new user: ")
 	last_name = args.last or input("Last name of the new user: ")
 	email = args.email or input("Email of the new user: ")
@@ -272,7 +271,7 @@ def parse_arguments():
 	piID = sanitize_text(piID)
 	first_name = sanitize_text(first_name, capitalize=True)
 	last_name = sanitize_text(last_name, capitalize=True)
-	email = sanitize_text(email)
+	email = email.strip()
 	alt_contact = sanitize_text(alt_contact)
 
 	# Check required fields
@@ -308,10 +307,7 @@ def main():
 
 	# Check that the PI is an actual PI
 	if isPI:
-		print(f"Check the following links to confirm that {first_name} {last_name} is a PI at MCW:")
-		res = search(f"{first_name} {last_name} Medical College of Wisconsin", num_results=10, unique=True, lang="en", region="us")
-		for link in res:
-			print(link)
+		print(f"Check in Google to confirm that {first_name} {last_name} is a PI at MCW.")
 		if input("Did the PI checkout? [y]: ")!='y':
 			sys.exit("Investigate further before adding user")
 
