@@ -97,7 +97,7 @@ def exitError(conn,msg):
 	closeConn(conn)
 	sys.exit()
 
-def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,isPI):
+def confirmArgs(netID, piID, first_name, last_name, email, neuroDesktops, neuroSquiggles, alt_contact, isPI, consult):
 	print("\nThese are the input arguments:\n" \
 		f"NetID of the new user:{netID}.\n" \
 		f"NetID of the PI:{piID}.\n" \
@@ -112,6 +112,11 @@ def confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggl
 		print("New user is a PI")
 	else:
 		print("New user is NOT a PI")
+
+	if consult:
+		print("User requested consultation")
+	else:
+		print("User did NOT request consultation (re-run with --consult if this is wrong)")
 
 	if input("Does this look correct? [y]: ")=='y':
 		return True
@@ -248,6 +253,7 @@ def sanitize_text(value, capitalize=False):
 
 def process_requestFile(request_file):
 	netID = piID = first_name = last_name = email = alt_contact = None
+	consult = False
 
 	try:
 		with open(request_file, "r") as fin:
@@ -266,6 +272,8 @@ def process_requestFile(request_file):
 					piID = (line.replace("PI_NetID: ","").strip() or None)
 				elif line.startswith("Alt_Contact: "):
 					alt_contact = (line.replace("Alt_Contact: ","").strip() or None)
+				elif line.startswith("Consult?:"):
+					consult = line.replace("Consult?:","")=="Yes"
 
 	except FileNotFoundError:
 		print(f"Error: The file '{request_file}' does not exist.")
@@ -276,7 +284,7 @@ def process_requestFile(request_file):
 	except OSError as e:
 		print(f"Error reading '{request_file}': {e}")
 
-	return [netID, piID, first_name, last_name, email, alt_contact]
+	return [netID, piID, first_name, last_name, email, alt_contact, consult]
 
 def parse_arguments():
 	# Get arguments
@@ -290,10 +298,11 @@ def parse_arguments():
 	parser.add_argument("--nsquiggles", action="store_true", help="Include NeuroSquiggles access")
 	parser.add_argument("--alt-contact", help="Alternative contact email (PI only)")
 	parser.add_argument("--request-file",help="File with the RCC Account Request email info.")
+	parser.add_argument("--consult", action="store_true", help="User requested consultation.")
 	args = parser.parse_args()
 
 	if args.request_file:
-		[args.user, args.pi, args.first, args.last, args.email, args.alt_contact] = process_requestFile(args.request_file)
+		[args.user, args.pi, args.first, args.last, args.email, args.alt_contact, args.consult] = process_requestFile(args.request_file)
 
 	netID = args.user or input("netID of the new user: ")
 	piID = args.pi or input("netID of the PI (same as user if it's a PI): ")
@@ -301,6 +310,7 @@ def parse_arguments():
 	last_name = args.last or input("Last name of the new user: ")
 	email = args.email or input("Email of the new user: ")
 	alt_contact = args.alt_contact
+	consult = args.consult or False
 	
 	# Clean arguments
 	netID = sanitize_text(netID)
@@ -328,13 +338,13 @@ def parse_arguments():
 		print("Warning: Alternative contact provided, but user is not a PI. Ignoring input.")
 		alt_contact = None
 
-	return [ netID, piID, first_name, last_name, email, args.ndesktops, args.nsquiggles, alt_contact, isPI ]
+	return [ netID, piID, first_name, last_name, email, args.ndesktops, args.nsquiggles, alt_contact, isPI, consult ]
 
 def main():
 	# Read and check arguments
-	[ netID, piID, first_name, last_name, email, neuroDesktops, neuroSquiggles, alt_contact, isPI ] = parse_arguments()
+	[ netID, piID, first_name, last_name, email, neuroDesktops, neuroSquiggles, alt_contact, isPI, consult ] = parse_arguments()
 	
-	if not confirmArgs(netID,piID,first_name,last_name,email,neuroDesktops,neuroSquiggles,alt_contact,isPI):
+	if not confirmArgs(netID, piID, first_name, last_name, email, neuroDesktops, neuroSquiggles, alt_contact, isPI, consult):
 		sys.exit("Correct arguments & re-run the script. Exiting.")
 
 	# Check that the id is correct in Active directory
@@ -486,6 +496,10 @@ def main():
 	email_content = file1.read()
 	file1.close()
 	email_content = email_content.replace("<first_name>",first_name).replace("<netID>",netID)
+	if consult:
+		email_content = email_content.replace("<consult>\n","")
+	else:
+		email_content = email_content.replace("<consult>","You requested a consultation. Please provide dates and times in the following two weeks for a Teams meeting with one of our team members.")
 	print("\n"+email_content)
 	input("Send email. Make sure to change Default Customer for the correct UserID! [Enter]")
 
