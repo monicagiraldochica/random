@@ -246,6 +246,38 @@ def sanitize_text(value, capitalize=False):
 	
 	return value.capitalize() if capitalize else value
 
+def process_requestFile(request_file):
+	netID = piID = first_name = last_name = email = alt_contact = None
+
+	try:
+		with open(request_file, "r") as fin:
+			for line in fin:
+				line = line.strip()
+
+				if line.startswith("First: "):
+					first_name = (line.replace("First: ","").strip() or None)
+				elif line.startswith("Last: "):
+					last_name = (line.replace("Last: ","").strip() or None)
+				elif line.startswith("NetID: "):
+					netID = (line.replace("NetID: ","").strip() or None)
+				elif line.startswith("Email: "):
+					email = (line.replace("Email: ","").strip() or None)
+				elif line.startswith("PI_NetID: "):
+					piID = (line.replace("PI_NetID: ","").strip() or None)
+				elif line.startswith("Alt_Contact: "):
+					alt_contact = (line.replace("Alt_Contact: ","").strip() or None)
+
+	except FileNotFoundError:
+		print(f"Error: The file '{request_file}' does not exist.")
+
+	except PermissionError:
+		print(f"Error: You do not have permission to read '{request_file}'.")
+
+	except OSError as e:
+		print(f"Error reading '{request_file}': {e}")
+
+	return [netID, piID, first_name, last_name, email, alt_contact]
+
 def parse_arguments():
 	# Get arguments
 	parser = argparse.ArgumentParser(description="RCC on boarding automation script")
@@ -257,7 +289,11 @@ def parse_arguments():
 	parser.add_argument("--ndesktops", action="store_true", help="Include NeuroDesktops access")
 	parser.add_argument("--nsquiggles", action="store_true", help="Include NeuroSquiggles access")
 	parser.add_argument("--alt-contact", help="Alternative contact email (PI only)")
+	parser.add_argument("--request-file",help="File with the RCC Account Request email info.")
 	args = parser.parse_args()
+
+	if args.request_file:
+		[args.user, args.pi, args.first, args.last, args.email, args.alt_contact] = process_requestFile(args.request_file)
 
 	netID = args.user or input("netID of the new user: ")
 	piID = args.pi or input("netID of the PI (same as user if it's a PI): ")
