@@ -55,12 +55,18 @@ main() {
 		exit 1
 	fi
 
+	# Include hidden files/folders in globbing
+	shopt -s dotglob
+
 	# Generate and sort output
 	for path in "$searchdir"/*; do
 		size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
 		owner=$(stat -c "%U" "$path")
 		echo -e "${size}\t${owner}\t${path}"
 	done | sort -hr | head -n "$nlines" > "$outfile"
+
+	# Disable dotglob to restore default behavior
+	shopt -u dotglob
 }
 
 main "$@"
