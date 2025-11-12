@@ -43,7 +43,6 @@ i=0
 
 for dir in "$searchdir"/*; do
 	[ "$i" -ge "$nlines" ] && continue
-	echo "$dir"
 
 	# Find the oldest access time among files inside the directory
 	newest_access=$(find "$dir" -type f -printf '%A@ %p\n' 2>/dev/null | sort -n | head -n1 | awk '{print $1}')
@@ -55,6 +54,7 @@ for dir in "$searchdir"/*; do
 	newest_access=$(date -d @"$newest_access" '+%Y-%m-%d %H:%M:%S')
 	
 	echo "${dir} was last accessed on ${newest_access}"
+	echo -e "${newest_access}\t${dir}"
 	(( i+=1 ))
 done
 
