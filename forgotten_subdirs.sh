@@ -41,10 +41,7 @@ parse_args "$@"
 #shopt -s dotglob
 i=0
 
-echo "$searchdir" "$nlines" "$i"
-
 for dir in "$searchdir"/*; do
-	echo "$dir"
 	[ "$i" -ge "$nlines" ] && continue
 	echo "$dir"
 
