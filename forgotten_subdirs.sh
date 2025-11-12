@@ -53,7 +53,6 @@ for dir in "$searchdir"/*; do
 	# Convert access time to human-readable format
 	newest_access=$(date -d @"$newest_access" '+%Y-%m-%d %H:%M:%S')
 	
-	echo "${dir} was last accessed on ${newest_access}"
 	echo -e "${newest_access}\t${dir}"
 	(( i+=1 ))
 done
