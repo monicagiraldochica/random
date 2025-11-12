@@ -39,8 +39,19 @@ parse_args() {
 ## Main code
 parse_args "$@"
 
+# Checks
 if [[ -z "$searchdir" || -z "$outfile" ]]; then
-    echo "Error: searchdir and outfile must not be empty." >&2
+    echo "Error: -f and -o flags cannot be missing, -n has to be greater than zero." >&2
+    exit 1
+fi
+
+if [[ -z "$nlines" || ! "$nlines" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Error: -n must be a positive integer greater than zero." >&2
+    exit 1
+fi
+
+if [[ ! -d "$searchdir" ]]; then
+    echo "Error: searchdir '$searchdir' does not exist or is not a directory." >&2
     exit 1
 fi
 
