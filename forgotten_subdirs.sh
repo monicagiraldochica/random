@@ -41,8 +41,7 @@ parse_args "$@"
 shopt -s dotglob
 i=0
 
-for dir in "$searchdir"/*/; do
-	[ -d "$dir" ] || continue   # skip if not a directory
+for dir in "$searchdir"/*; do
 	[ "$i" -ge "$nlines" ] || continue
 
 	# Find the oldest access time among files inside the directory
