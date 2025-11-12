@@ -6,6 +6,7 @@
 ## Global variables
 nlines=0
 searchdir=""
+outfile=""
 
 ## Functions
 printhelp(){
@@ -36,6 +37,8 @@ parse_args() {
 
 ## Main code
 parse_args "$@"
+
+echo "$outfile"
 
 for path in "$searchdir"/*; do
 	size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
