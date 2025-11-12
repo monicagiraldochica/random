@@ -12,8 +12,8 @@ outfile=""
 printhelp(){
 	echo -e "Mandatory flags:\n" \
 		"\t-n N\t: Print N lines max\n" \
-		"\t-f folder\t: Search folder\n"
-
+		"\t-f folder\t: Search folder\n" \
+		"\t-o file\t: Output file\n"
 	exit
 }
 
@@ -36,27 +36,31 @@ parse_args() {
 	done
 }
 
-## Main code
-parse_args "$@"
+main() {
+	parse_args "$@"
 
-# Checks
-if [[ -z "$searchdir" || -z "$outfile" ]]; then
-    echo "Error: -f and -o flags cannot be missing, -n has to be greater than zero." >&2
-    exit 1
-fi
+	# Checks
+	if [[ -z "$searchdir" || -z "$outfile" ]]; then
+		echo "Error: -f and -o flags cannot be missing." >&2
+		exit 1
+	fi
 
-if [[ -z "$nlines" || ! "$nlines" =~ ^[1-9][0-9]*$ ]]; then
-    echo "Error: -n must be a positive integer greater than zero." >&2
-    exit 1
-fi
+	if [[ -z "$nlines" || ! "$nlines" =~ ^[1-9][0-9]*$ ]]; then
+		echo "Error: -n must be a positive integer greater than zero." >&2
+		exit 1
+	fi
 
-if [[ ! -d "$searchdir" ]]; then
-    echo "Error: searchdir '$searchdir' does not exist or is not a directory." >&2
-    exit 1
-fi
+	if [[ ! -d "$searchdir" ]]; then
+		echo "Error: searchdir '$searchdir' does not exist or is not a directory." >&2
+		exit 1
+	fi
 
-for path in "$searchdir"/*; do
-	size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
-	owner=$(stat -c "%U" "$path")
-    echo -e "$size\t$owner\t$path"
-done | sort -hr | head -n "$nlines" > "$outfile"
+	# Generate and sort output
+	for path in "$searchdir"/*; do
+		size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
+		owner=$(stat -c "%U" "$path")
+		echo -e "$size\t$owner\t$path"
+	done | sort -hr | head -n "$nlines" > "$outfile"
+}
+
+main "$@"
