@@ -39,10 +39,8 @@ parse_args() {
 ## Main code
 parse_args "$@"
 
-echo "$outfile"
-
 for path in "$searchdir"/*; do
 	size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
 	owner=$(stat -c "%U" "$path")
     echo -e "$size\t$owner\t$path"
-done | sort -hr | head -n "$nlines"
+done | sort -hr | head -n "$nlines" > "$outfile"
