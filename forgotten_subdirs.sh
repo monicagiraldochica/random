@@ -12,7 +12,6 @@ printhelp(){
 	echo -e "Mandatory flags:\n" \
 		"\t-n N\t: Print N lines max\n" \
 		"\t-f folder\t: Search folder\n"
-
 	exit
 }
 
@@ -34,25 +33,44 @@ parse_args() {
 	done
 }
 
-## Main code
-parse_args "$@"
+main() {
+	parse_args "$@"
 
-# Include hidden files/folders in globbing
-#shopt -s dotglob
+    # Checks
+    if [[ -z "$searchdir" ]]; then
+        echo "Error: -f flag cannot be missing." >&2
+        exit 1
+    fi
 
-for dir in "$searchdir"/*; do
-	# Find the oldest access time among files inside the directory
-	newest_access=$(find "$dir" -type f -printf '%A@ %p\n' 2>/dev/null | sort -n | head -n1 | awk '{print $1}')
+    if [[ -z "$nlines" || ! "$nlines" =~ ^[1-9][0-9]*$ ]]; then
+        echo "Error: -n must be a positive integer greater than zero." >&2
+        exit 1
+    fi
 
-	# If the directory has no files, fallback to directory's own access time
-	[ -z "$newest_access" ] && newest_access=$(stat -c %X "$dir")
+    if [[ ! -d "$searchdir" ]]; then
+        echo "Error: searchdir '$searchdir' does not exist or is not a directory." >&2
+        exit 1
+    fi
 
-	# Convert access time to human-readable format
-	newest_access=$(date -d @"$newest_access" '+%Y-%m-%d %H:%M:%S')
-	
-	echo -e "${newest_access}\t${dir}"
-	(( i+=1 ))
-done | sort -k1,2 | head -n "$nlines"
+	# Include hidden files/folders in globbing
+	#shopt -s dotglob
 
-# Disable dotglob to restore default behavior
-#shopt -u dotglob
+	for dir in "$searchdir"/*; do
+		# Find the oldest access time among files inside the directory
+		newest_access=$(find "$dir" -type f -printf '%A@ %p\n' 2>/dev/null | sort -n | head -n1 | awk '{print $1}')
+
+		# If the directory has no files, fallback to directory's own access time
+		[ -z "$newest_access" ] && newest_access=$(stat -c %X "$dir")
+
+		# Convert access time to human-readable format
+		newest_access=$(date -d @"$newest_access" '+%Y-%m-%d %H:%M:%S')
+		
+		echo -e "${newest_access}\t${dir}"
+		(( i+=1 ))
+	done | sort -k1,2 | head -n "$nlines"
+
+	# Disable dotglob to restore default behavior
+	#shopt -u dotglob
+}
+
+main "$@"
