@@ -38,8 +38,10 @@ parse_args() {
 parse_args "$@"
 
 # Include hidden files/folders in globbing
-shopt -s dotglob
+#shopt -s dotglob
 i=0
+
+echo "$searchdir" "$nlines"
 
 for dir in "$searchdir"/*; do
 	[ "$i" -ge "$nlines" ] || continue
@@ -58,4 +60,4 @@ for dir in "$searchdir"/*; do
 done
 
 # Disable dotglob to restore default behavior
-shopt -u dotglob
+#shopt -u dotglob
