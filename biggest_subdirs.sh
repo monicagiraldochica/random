@@ -52,5 +52,5 @@ find "${searchdir}" -mindepth 1 -maxdepth 1 \( -name ".*" -o -name "*" \) -exec 
 #    size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
 #    owner=$(stat -c "%U" "$path")
 #    echo -e "$size\t$owner\t$path"
-#  done
+  done
 ' sh {} + | sort -h | tail -n "$nlines"
