@@ -53,7 +53,7 @@ main() {
     fi
 
 	# Include hidden files/folders in globbing
-	#shopt -s dotglob
+	shopt -s dotglob
 
 	for dir in "$searchdir"/*; do
 		# Find the oldest access time among files inside the directory
@@ -70,7 +70,7 @@ main() {
 	done | sort -k1,2 | head -n "$nlines"
 
 	# Disable dotglob to restore default behavior
-	#shopt -u dotglob
+	shopt -u dotglob
 }
 
 main "$@"
