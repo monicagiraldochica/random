@@ -46,6 +46,6 @@ parse_args "$@"
 #  done
 #' sh {} + | sort -h | tail -n "$nlines"
 
-for item in *; do
+for item in "$searchdir"/*; do
     echo "$item"
 done
