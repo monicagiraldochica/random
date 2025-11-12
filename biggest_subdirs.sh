@@ -18,10 +18,11 @@ printhelp(){
 }
 
 parse_args() {
-	while getopts ":hn:f:" opt; do
+	while getopts ":hno:f:" opt; do
 		case $opt in
 			h) printhelp;;
 			n) nlines=$OPTARG;;
+			o) outfile=$OPTARG;;
 			f) 
 				searchdir=$OPTARG
 				# Remove trailing backslash if present
