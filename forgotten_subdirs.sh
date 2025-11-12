@@ -39,11 +39,8 @@ parse_args "$@"
 
 # Include hidden files/folders in globbing
 #shopt -s dotglob
-i=0
 
 for dir in "$searchdir"/*; do
-	[ "$i" -ge "$nlines" ] && continue
-
 	# Find the oldest access time among files inside the directory
 	newest_access=$(find "$dir" -type f -printf '%A@ %p\n' 2>/dev/null | sort -n | head -n1 | awk '{print $1}')
 
@@ -55,7 +52,7 @@ for dir in "$searchdir"/*; do
 	
 	echo -e "${newest_access}\t${dir}"
 	(( i+=1 ))
-done
+done | sort -k1,2 | head -n "$nlines"
 
 # Disable dotglob to restore default behavior
 #shopt -u dotglob
