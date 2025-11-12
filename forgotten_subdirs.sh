@@ -41,10 +41,11 @@ parse_args "$@"
 #shopt -s dotglob
 i=0
 
-echo "$searchdir" "$nlines"
+echo "$searchdir" "$nlines" "$i"
 
 for dir in "$searchdir"/*; do
-	[ "$i" -ge "$nlines" ] || continue
+	echo "$dir"
+	[ "$i" -ge "$nlines" ] && continue
 	echo "$dir"
 
 	# Find the oldest access time among files inside the directory
