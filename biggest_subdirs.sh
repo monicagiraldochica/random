@@ -39,6 +39,11 @@ parse_args() {
 ## Main code
 parse_args "$@"
 
+if [[ -z "$searchdir" || -z "$outfile" ]]; then
+    echo "Error: searchdir and outfile must not be empty." >&2
+    exit 1
+fi
+
 for path in "$searchdir"/*; do
 	size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
 	owner=$(stat -c "%U" "$path")
