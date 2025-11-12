@@ -18,7 +18,7 @@ printhelp(){
 }
 
 parse_args() {
-	while getopts ":hno:f:" opt; do
+	while getopts ":hn:o:f:" opt; do
 		case $opt in
 			h) printhelp;;
 			n) nlines=$OPTARG;;
