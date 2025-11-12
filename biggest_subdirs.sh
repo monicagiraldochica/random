@@ -35,6 +35,7 @@ parse_args() {
 }
 
 ## Main code
+echo "hola"
 parse_args "$@"
 
 find "${searchdir}" -mindepth 1 -maxdepth 1 \( -name ".*" -o -name "*" \) -exec sh -c '
