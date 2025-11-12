@@ -432,7 +432,7 @@ def main():
 		createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,conn)
 		userInfo = myldaplib.getUserInfo(conn,netID,ldap_setup)
 		printLDAPdic(userInfo.pop("dn"),userInfo)
-		if input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort [y]: ")=='y':
+		if input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort ['y' to abort, 'n' to continue]: ")=='y':
 			exitError(conn, "User created with errors")
 
 	# If it's not a PI, add user to the new group
