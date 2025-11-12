@@ -44,6 +44,7 @@ i=0
 echo "$searchdir" "$nlines"
 
 for dir in "$searchdir"/*; do
+	echo "$dir"
 	[ "$i" -ge "$nlines" ] || continue
 
 	# Find the oldest access time among files inside the directory
