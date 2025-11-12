@@ -6,6 +6,7 @@
 ## Global variables
 nlines=0
 searchdir=""
+outfile=""
 
 ## Functions
 printhelp(){
@@ -17,10 +18,11 @@ printhelp(){
 }
 
 parse_args() {
-	while getopts ":hn:f:" opt; do
+	while getopts ":hno:f:" opt; do
 		case $opt in
 			h) printhelp;;
 			n) nlines=$OPTARG;;
+			o) outfile=$OPTARG;;
 			f) 
 				searchdir=$OPTARG
 				# Remove trailing backslash if present
@@ -37,8 +39,13 @@ parse_args() {
 ## Main code
 parse_args "$@"
 
+if [[ -z "$searchdir" || -z "$outfile" ]]; then
+    echo "Error: searchdir and outfile must not be empty." >&2
+    exit 1
+fi
+
 for path in "$searchdir"/*; do
 	size=$(du -sh "$path" 2>/dev/null | awk "{print \$1}")
 	owner=$(stat -c "%U" "$path")
     echo -e "$size\t$owner\t$path"
-done | sort -hr | head -n "$nlines"
+done | sort -hr | head -n "$nlines" > "$outfile"
