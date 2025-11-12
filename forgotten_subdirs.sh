@@ -6,6 +6,7 @@
 ## Global variables
 nlines=0
 searchdir=""
+outfile=""
 
 ## Functions
 printhelp(){
@@ -16,10 +17,11 @@ printhelp(){
 }
 
 parse_args() {
-	while getopts ":hn:f:" opt; do
+	while getopts ":hn:o:f:" opt; do
 		case $opt in
 			h) printhelp;;
 			n) nlines=$OPTARG;;
+			o) outfile=$OPTARG;;
 			f) 
 				searchdir=$OPTARG
 				# Remove trailing backslash if present
@@ -37,8 +39,8 @@ main() {
 	parse_args "$@"
 
     # Checks
-    if [[ -z "$searchdir" ]]; then
-        echo "Error: -f flag cannot be missing." >&2
+    if [[ -z "$searchdir" || -z "$outfile"  ]]; then
+        echo "Error: -f and -o flags cannot be missing." >&2
         exit 1
     fi
 
@@ -67,7 +69,7 @@ main() {
 		
 		echo -e "${newest_access}\t${dir}"
 		(( i+=1 ))
-	done | sort -k1,2 | head -n "$nlines"
+	done | sort -k1,2 | head -n "$nlines" > "$outfile"
 
 	# Disable dotglob to restore default behavior
 	shopt -u dotglob
