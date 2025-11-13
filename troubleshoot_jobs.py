@@ -37,3 +37,5 @@ def get_slurm_job_info(job_id):
 
 df = get_slurm_job_info(5886414)
 print(df)
+df = get_slurm_job_info(7777777)
+print(df)
