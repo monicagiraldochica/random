@@ -23,16 +23,17 @@ def get_slurm_job_info(job_id):
 
     # Flatten multiline scontrol output
     output = re.sub(r'\s+', ' ', output)
+    print(output)
 
     # Parse key=value pairs
-    data = dict(re.findall(r'(\S+?)=(\S+)', output))
+    #data = dict(re.findall(r'(\S+?)=(\S+)', output))
 
     # Extract only requested fields
-    fields = [ "UserId", "Priority", "QOS", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "EligibleTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut" ]
-    info = [(field, data.get(field, "")) for field in fields]
+    #fields = [ "UserId", "Priority", "QOS", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "EligibleTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut" ]
+    #info = [(field, data.get(field, "")) for field in fields]
 
     # Return as DataFrame
-    return pd.DataFrame(info, columns=["Field", "Value"])
+    #return pd.DataFrame(info, columns=["Field", "Value"])
 
 df = get_slurm_job_info(5886414)
 print(df)
