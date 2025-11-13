@@ -34,5 +34,5 @@ def get_slurm_job_info(job_id):
     # Return as DataFrame
     return pd.DataFrame(info, columns=["Field", "Value"])
 
-df = get_slurm_job_info(123456)
+df = get_slurm_job_info(5886414)
 print(df)
