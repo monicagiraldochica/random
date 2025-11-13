@@ -1,5 +1,5 @@
 import subprocess
-import pandas as pd
+#import pandas as pd
 import re
 
 def get_slurm_job_info(job_id):
