@@ -63,14 +63,15 @@ def get_jobInfo_sacct(job_id):
     
     first_line = output[0]
     second_line = output[1] if len(output)>1 else None
-    print(first_line)
-    print(second_line)
     if (first_line is None) or (second_line is None):
         return pd.DataFrame()
     
     parts1 = first_line.split()
-    parts2 = second_line.split()
+    parts2 = second_line.split()[-2:]
+
+    print(first_line)
     print(parts1)
+    print(second_line)
     print(parts2)
 
     # If sacct gave fewer columns than expected
