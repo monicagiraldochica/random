@@ -92,8 +92,8 @@ def get_jobInfo_sacct(job_id):
 
     move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
     mask = df['Field'].isin(move_last)
-    f = pd.concat([df[~mask], df[mask]], ignore_index=True)
-    
+    df = pd.concat([df[~mask], df[mask]], ignore_index=True)
+
     df = df.reset_index(drop=True)
 
     return df
