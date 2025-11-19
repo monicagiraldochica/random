@@ -56,26 +56,25 @@ def get_jobInfo_sacct(job_id):
         # Job not found or command failed
         return pd.DataFrame()
     
-    output = result.stdout.strip().splitlines()
+    output = result.stdout.strip()#.splitlines()
     # If there are no lines, the job is not in accounting DB yet
-    if len(output)==0:
-        return pd.DataFrame()
-    
+    #if len(output)==0:
+    #    return pd.DataFrame()
     print(output)
     
-    first_line = next((line for line in output if line.strip()), None)
-    print(first_line)
-    if first_line is None:
-        return pd.DataFrame()
-    parts1 = first_line.split()
-    print(parts1)
+    #first_line = next((line for line in output if line.strip()), None)
+    #print(first_line)
+    #if first_line is None:
+    #    return pd.DataFrame()
+    #parts1 = first_line.split()
+    #print(parts1)
     
-    second_line = next((line for line in output if line.strip()), None)
-    print(second_line)
-    if second_line is None:
-        return pd.DataFrame()
-    parts2 = second_line.split()
-    print(parts2)
+    #second_line = next((line for line in output if line.strip()), None)
+    #print(second_line)
+    #if second_line is None:
+    #    return pd.DataFrame()
+    #parts2 = second_line.split()
+    #print(parts2)
 
     # If sacct gave fewer columns than expected
     #if len(parts) < len(fields):
