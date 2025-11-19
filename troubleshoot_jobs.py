@@ -43,8 +43,7 @@ def get_jobInfo_sacct(job_id):
     Returns a pandas DataFrame with columns ['Field', 'Value'].
     Returns an empty DataFrame if no sacct data exists yet.
     """
-    fields = [ "User", "State", "ExitCode", "ReqMem", "AveRSS", "MaxRSS" ]
-    #fields = [ "User", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
+    fields = [ "User", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
     #, "Command", "StdErr", "StdOut", "WorkDir"
     format_str = ",".join(fields)
 
@@ -72,12 +71,10 @@ def get_jobInfo_sacct(job_id):
     print(second_line)
     print(parts)
 
-    # If sacct gave fewer columns than expected
-    #if len(parts) < len(fields):
-        # pad missing values with empty strings
-    #    parts = parts + [""] * (len(fields) - len(parts))
+    if len(parts)<len(fields):
+        return pd.DataFrame()
 
-    #return pd.DataFrame({ "Field": fields, "Value": parts })
+    return pd.DataFrame({ "Field": fields, "Value": parts })
     
 df = get_jobInfo_sacct(5886414)
 #print(df)
