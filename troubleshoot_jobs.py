@@ -35,6 +35,9 @@ def get_jobInfo_scontrol(job_id):
 
     df = pd.DataFrame(info, columns=["Field", "Value"])
     df = df[~df["Value"].isin([None, '', "(null)", "None"])]
+    for col in ["ReqTRES", "AllocTRES"]:
+        mask = df["Field"] == col
+        df.loc[mask, "Value"] = df.loc[mask, "Value"].str.replace(r',billing=.*$', '', regex=True)
     df = df.reset_index(drop=True)
     return df
 
