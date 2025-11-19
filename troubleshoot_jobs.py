@@ -82,8 +82,8 @@ def get_jobInfo_sacct(job_id):
 
     return pd.DataFrame({ "Field": fields, "Value": parts })
     
-#df = get_jobInfo_sacct(5886414)
-#print(df)
+df = get_jobInfo_sacct(5886414)
+print(df)
 #df = get_jobInfo_sacct(7777777)
 #print(df)
 #df = get_jobInfo_sacct(5896738)
