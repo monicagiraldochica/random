@@ -56,6 +56,7 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     output = result.stdout.strip().splitlines()
+    print(output)
     # If there are no lines, the job is not in accounting DB yet
     if len(output)==0:
         return pd.DataFrame()
