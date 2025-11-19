@@ -82,6 +82,9 @@ def get_jobInfo_sacct(job_id):
     # Edit DF
     df = pd.DataFrame({ "Field": fields, "Value": parts })
     df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
+    cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
+    new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus}"}
+    print(new_row)
 
     return df
     
