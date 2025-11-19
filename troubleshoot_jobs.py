@@ -62,12 +62,14 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     first_line = next((line for line in output if line.strip()), None)
+    print(first_line)
     if first_line is None:
         return pd.DataFrame()
     parts1 = first_line.split()
     print(parts1)
     
     second_line = next((line for line in output if line.strip()), None)
+    print(second_line)
     if second_line is None:
         return pd.DataFrame()
     parts2 = second_line.split()
