@@ -34,7 +34,8 @@ def get_jobInfo_scontrol(job_id):
     info = [(field, data.get(field, "")) for field in fields]
 
     df = pd.DataFrame(info, columns=["Field", "Value"])
-    df = df[~df['Value'].isin([None, '', '(null)'])]
+    df = df[~df["Value"].isin([None, '', "(null)", "None"])]
+    df = df.reset_index(drop=True)
     return df
 
 # Better to use for failed or completed jobs
