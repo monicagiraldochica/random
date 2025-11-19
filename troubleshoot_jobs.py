@@ -43,8 +43,9 @@ def get_jobInfo_sacct(job_id):
     Returns a pandas DataFrame with columns ['Field', 'Value'].
     Returns an empty DataFrame if no sacct data exists yet.
     """
-    fields = [ "User", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
-    #, "MaxRSS", "Command", "StdErr", "StdOut", "WorkDir"
+    fields = [ "User", "State", "ExitCode", "ReqMem", "AveRSS", "MaxRSS" ]
+    #fields = [ "User", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
+    #, "Command", "StdErr", "StdOut", "WorkDir"
     format_str = ",".join(fields)
 
     try:
@@ -60,24 +61,28 @@ def get_jobInfo_sacct(job_id):
     if len(output)==0:
         return pd.DataFrame()
     
-    # sacct prints duplicate entries sometimes; take ONLY the first *non-empty* line
     first_line = next((line for line in output if line.strip()), None)
     if first_line is None:
         return pd.DataFrame()
+    parts1 = first_line.split()
+    print(parts1)
     
-    # Split by whitespace into columns
-    parts = first_line.split()
+    second_line = next((line for line in output if line.strip()), None)
+    if second_line is None:
+        return pd.DataFrame()
+    parts2 = first_line.split()
+    print(parts2)
 
     # If sacct gave fewer columns than expected
-    if len(parts) < len(fields):
+    #if len(parts) < len(fields):
         # pad missing values with empty strings
-        parts = parts + [""] * (len(fields) - len(parts))
+    #    parts = parts + [""] * (len(fields) - len(parts))
 
-    return pd.DataFrame({ "Field": fields, "Value": parts })
+    #return pd.DataFrame({ "Field": fields, "Value": parts })
     
 df = get_jobInfo_sacct(5886414)
-print(df)
-df = get_jobInfo_sacct(7777777)
-print(df)
-df = get_jobInfo_sacct(5896738)
-print(df)
+#print(df)
+#df = get_jobInfo_sacct(7777777)
+#print(df)
+#df = get_jobInfo_sacct(5896738)
+#print(df)
