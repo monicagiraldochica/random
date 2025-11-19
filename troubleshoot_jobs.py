@@ -63,6 +63,7 @@ def get_jobInfo_sacct(job_id):
     print(output)
     output = output.splitlines()
     print(output)
+    print(output[0])
     
     #first_line = next((line for line in output if line.strip()), None)
     #print(first_line)
