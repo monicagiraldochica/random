@@ -34,7 +34,7 @@ def get_jobInfo_scontrol(job_id):
     info = [(field, data.get(field, "")) for field in fields]
 
     df = pd.DataFrame(info, columns=["Field", "Value"])
-    print(df["ReqTRES"])
+    #print(df["ReqTRES"])
 
     # Return as DataFrame
     return df
@@ -80,16 +80,16 @@ def get_jobInfo_sacct(job_id):
 
     return pd.DataFrame({ "Field": fields, "Value": parts })
     
-df = get_jobInfo_sacct(5886414)
-print(df)
-df = get_jobInfo_sacct(7777777)
-print(df)
-df = get_jobInfo_sacct(5896738)
-print(df)
+#df = get_jobInfo_sacct(5886414)
+#print(df)
+#df = get_jobInfo_sacct(7777777)
+#print(df)
+#df = get_jobInfo_sacct(5896738)
+#print(df)
     
 df = get_jobInfo_scontrol(5886414)
 print(df)
-df = get_jobInfo_scontrol(7777777)
-print(df)
-df = get_jobInfo_scontrol(5896738)
-print(df)
+#df = get_jobInfo_scontrol(7777777)
+#print(df)
+#df = get_jobInfo_scontrol(5896738)
+#print(df)
