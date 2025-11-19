@@ -61,6 +61,8 @@ def get_jobInfo_sacct(job_id):
     #if len(output)==0:
     #    return pd.DataFrame()
     print(output)
+    output = output.splitlines()
+    print(output)
     
     #first_line = next((line for line in output if line.strip()), None)
     #print(first_line)
