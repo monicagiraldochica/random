@@ -89,6 +89,11 @@ def get_jobInfo_sacct(job_id):
     new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus},mem={mem},node={nodes}"}
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
+
+    move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
+    mask = df['Field'].isin(move_last)
+    f = pd.concat([df[~mask], df[mask]], ignore_index=True)
+    
     df = df.reset_index(drop=True)
 
     return df
