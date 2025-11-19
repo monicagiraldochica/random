@@ -33,12 +33,14 @@ def get_jobInfo_scontrol(job_id):
     fields = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
     info = [(field, data.get(field, "")) for field in fields]
 
+    # Edit DF
     df = pd.DataFrame(info, columns=["Field", "Value"])
     df = df[~df["Value"].isin([None, '', "(null)", "None"])]
     for col in ["ReqTRES", "AllocTRES"]:
-        mask = df["Field"] == col
-        df.loc[mask, "Value"] = df.loc[mask, "Value"].str.replace(r',billing=.*$', '', regex=True)
+        df.loc[df["Field"]==col, "Value"] = df.loc[df["Field"]==col, "Value"].str.replace(r',billing=.*$', '', regex=True)
+    df.loc[df["Field"]=="UserId", "Value"] = df.loc[df["Field"]=="UserId", "Value"].str.replace(r'(.*$', '', regex=True)
     df = df.reset_index(drop=True)
+
     return df
 
 # Better to use for failed or completed jobs
