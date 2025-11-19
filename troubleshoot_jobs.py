@@ -89,6 +89,7 @@ df = get_jobInfo_sacct(5886414)
 print(df)
 #df = get_jobInfo_sacct(7777777)
 #print(df)
+print("\n")
 df = get_jobInfo_sacct(5896738)
 print(df)
     
