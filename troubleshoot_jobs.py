@@ -55,6 +55,7 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     output = result.stdout.strip().splitlines()
+    print(output)
     # If there are no lines, the job is not in accounting DB yet
     if len(output)==0:
         return pd.DataFrame()
@@ -74,9 +75,9 @@ def get_jobInfo_sacct(job_id):
 
     return pd.DataFrame({ "Field": fields, "Value": parts })
     
-df = get_jobInfo_sacct(5886414)
-print(df)
-df = get_jobInfo_sacct(7777777)
-print(df)
+#df = get_jobInfo_sacct(5886414)
+#print(df)
+#df = get_jobInfo_sacct(7777777)
+#print(df)
 df = get_jobInfo_sacct(5896738)
 print(df)
