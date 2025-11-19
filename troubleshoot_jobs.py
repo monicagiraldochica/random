@@ -69,7 +69,7 @@ def get_jobInfo_sacct(job_id):
     else:
         parts = first_line.split()
         print(parts)
-        print(len(parts)+"\n\n")
+        print(len(parts))
         fields = fields[:-2]
         print(fields)
         print(len(fields))
