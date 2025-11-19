@@ -43,8 +43,7 @@ def get_jobInfo_sacct(job_id):
     Returns a pandas DataFrame with columns ['Field', 'Value'].
     Returns an empty DataFrame if no sacct data exists yet.
     """
-    fields = [ "User", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "ReqCPUS", "AllocCPUS", "StdErr", "ReqMem", "AveRSS", "MaxRSS" ]
-    #, "Command", "StdOut", "WorkDir"
+    fields = [ "User", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "ReqCPUS", "AllocCPUS", "WorkDir", "JobName", "ReqMem", "AveRSS", "MaxRSS" ]
     format_str = ",".join(fields)
 
     try:
