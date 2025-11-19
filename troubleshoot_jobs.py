@@ -70,7 +70,7 @@ def get_jobInfo_sacct(job_id):
     second_line = next((line for line in output if line.strip()), None)
     if second_line is None:
         return pd.DataFrame()
-    parts2 = first_line.split()
+    parts2 = second_line.split()
     print(parts2)
 
     # If sacct gave fewer columns than expected
