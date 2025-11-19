@@ -71,6 +71,9 @@ def get_jobInfo_sacct(job_id):
         fields = fields[:-2]
     if len(parts)<len(fields):
         return pd.DataFrame()
+    
+    if parts[14]=="sys/dashb+":
+        parts[14]+=" (ondemand)"
 
     return pd.DataFrame({ "Field": fields, "Value": parts })
     
