@@ -60,17 +60,24 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     first_line = output[0]
-    print(first_line)
     second_line = output[1] if len(output)>1 else None
-    print(second_line)
     if (first_line is None) or (second_line is None):
         return pd.DataFrame()
     
     if first_line.split()[1]!="RUNNING":
         parts = first_line.split()+second_line.split()[-2:]
     else:
+        print("RUNNING")
+        print(parts)
+        print(len(parts))
         parts = first_line.split()[:-2]
+        print(parts)
+        print(len(parts)+"\n\n")
+        print(fields)
+        print(len(fields))
         fields = fields[:-2]
+        print(fields)
+        print(len(fields))
     if len(parts)<len(fields):
         return pd.DataFrame()
 
@@ -80,5 +87,6 @@ def get_jobInfo_sacct(job_id):
 #print(df)
 #df = get_jobInfo_sacct(7777777)
 #print(df)
-df = get_jobInfo_sacct(5896738)
-print(df)
+#df = get_jobInfo_sacct(5896738)
+#print(df)
+get_jobInfo_sacct(5896738)
