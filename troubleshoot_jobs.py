@@ -33,8 +33,8 @@ def get_jobInfo_scontrol(job_id):
     fields = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
     info = [(field, data.get(field, "")) for field in fields]
 
-    # Return as DataFrame
-    return pd.DataFrame(info, columns=["Field", "Value"])
+    df = pd.DataFrame(info, columns=["Field", "Value"])
+    return df
 
 # Better to use for failed or completed jobs
 def get_jobInfo_sacct(job_id):
@@ -84,9 +84,9 @@ def get_jobInfo_sacct(job_id):
 #df = get_jobInfo_sacct(5896738)
 #print(df)
     
-df = get_jobInfo_scontrol(5886414)
-print(df)
-df = get_jobInfo_scontrol(7777777)
-print(df)
+#df = get_jobInfo_scontrol(5886414)
+#print(df)
+#df = get_jobInfo_scontrol(7777777)
+#print(df)
 df = get_jobInfo_scontrol(5896738)
 print(df)
