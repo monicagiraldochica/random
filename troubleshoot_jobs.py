@@ -3,7 +3,8 @@ import subprocess
 import pandas as pd
 import re
 
-def get_slurm_job_info(job_id):
+# Only works for running, queued or recently finished jobs
+def get_jobInfo_scontrol(job_id):
     """
     Get selected job information from scontrol for a given job ID.
     Returns a pandas DataFrame with columns ['Field', 'Value'].
@@ -15,12 +16,12 @@ def get_slurm_job_info(job_id):
 
     except subprocess.CalledProcessError:
         # Job not found or command failed
-        return pd.DataFrame(columns=["Field", "Value"])
+        return pd.DataFrame()
 
     output = result.stdout.strip()
     if not output or "JobId" not in output:
         # Job not in memory or invalid
-        return pd.DataFrame(columns=["Field", "Value"])
+        return pd.DataFrame()
 
     # Flatten multiline scontrol output
     output = re.sub(r'\s+', ' ', output)
@@ -29,13 +30,15 @@ def get_slurm_job_info(job_id):
     data = dict(re.findall(r'(\S+?)=(\S+)', output))
 
     # Extract only requested fields
-    fields = [ "UserId", "Priority", "QOS", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "EligibleTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut" ]
+    fields = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
     info = [(field, data.get(field, "")) for field in fields]
 
     # Return as DataFrame
     return pd.DataFrame(info, columns=["Field", "Value"])
 
-df = get_slurm_job_info(5886414)
+# Better to use for failed or completed jobs
+
+df = get_jobInfo_scontrol(5886414)
 print(df)
-df = get_slurm_job_info(7777777)
+df = get_jobInfo_scontrol(7777777)
 print(df)
