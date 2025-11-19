@@ -79,21 +79,22 @@ def get_jobInfo_sacct(job_id):
     if len(parts)<len(fields):
         return pd.DataFrame()
     
-    if parts[14]=="sys/dashb+":
-        parts[14]+=" (ondemand)"
+    # Edit DF
+    df = pd.DataFrame({ "Field": fields, "Value": parts })
+    df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
 
-    return pd.DataFrame({ "Field": fields, "Value": parts })
+    return df
     
 df = get_jobInfo_sacct(5886414)
 print(df)
 #df = get_jobInfo_sacct(7777777)
 #print(df)
-#df = get_jobInfo_sacct(5896738)
-#print(df)
+df = get_jobInfo_sacct(5896738)
+print(df)
     
 #df = get_jobInfo_scontrol(5886414)
 #print(df)
 #df = get_jobInfo_scontrol(7777777)
 #print(df)
-df = get_jobInfo_scontrol(5896738)
-print(df)
+#df = get_jobInfo_scontrol(5896738)
+#print(df)
