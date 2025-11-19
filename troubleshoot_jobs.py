@@ -32,6 +32,7 @@ def get_jobInfo_scontrol(job_id):
     # Extract only requested fields
     fields = [ "UserId", "JobState", "Reason", "RunTime", "TimeLimit", "SubmitTime", "StartTime", "EndTime", "Partition", "NodeList", "ReqTRES", "AllocTRES", "Command", "StdErr", "StdOut", "WorkDir" ]
     info = [(field, data.get(field, "")) for field in fields]
+    print(info)
 
     df = pd.DataFrame(info, columns=["Field", "Value"])
     return df
