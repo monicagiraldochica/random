@@ -60,25 +60,18 @@ def get_jobInfo_sacct(job_id):
     # If there are no lines, the job is not in accounting DB yet
     if len(output)==0:
         return pd.DataFrame()
-    print(output)
-    print("**"+output[0]+"**")
-    print("**"+output[1]+"**")
     
     first_line = output[0]
-    #first_line = next((line for line in output if line.strip()), None)
-    print(first_line)
-    #if first_line is None:
-    #    return pd.DataFrame()
-    #parts1 = first_line.split()
-    #print(parts1)
-    
     second_line = output[1] if len(output)>1 else None
-    #second_line = next((line for line in output if line.strip()), None)
+    print(first_line)
     print(second_line)
-    #if second_line is None:
-    #    return pd.DataFrame()
-    #parts2 = second_line.split()
-    #print(parts2)
+    if (first_line is None) or (second_line is None):
+        return pd.DataFrame()
+    
+    parts1 = first_line.split()
+    parts2 = second_line.split()
+    print(parts1)
+    print(parts2)
 
     # If sacct gave fewer columns than expected
     #if len(parts) < len(fields):
