@@ -67,12 +67,9 @@ def get_jobInfo_sacct(job_id):
     if first_line.split()[1]!="RUNNING":
         parts = first_line.split()+second_line.split()[-2:]
     else:
-        print("RUNNING")
-        print(first_line.split())
-        print(len(first_line.split()))
-        #parts = first_line.split()[:-2]
-        #print(parts)
-        #print(len(parts)+"\n\n")
+        parts = first_line.split()
+        print(parts)
+        print(len(parts)+"\n\n")
         fields = fields[:-2]
         print(fields)
         print(len(fields))
