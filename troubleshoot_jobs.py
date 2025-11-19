@@ -73,11 +73,9 @@ def get_jobInfo_sacct(job_id):
         #parts = first_line.split()[:-2]
         #print(parts)
         #print(len(parts)+"\n\n")
+        fields = fields[:-2]
         print(fields)
         print(len(fields))
-        #fields = fields[:-2]
-        #print(fields)
-        #print(len(fields))
     #if len(parts)<len(fields):
     #    return pd.DataFrame()
 
