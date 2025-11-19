@@ -86,7 +86,7 @@ def get_jobInfo_sacct(job_id):
     mem = df.query("Field=='ReqMem'")["Value"].iloc[0]
     nodes = len(df.query("Field=='NodeList'")["Value"].iloc[0].split(","))
     new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus},mem={mem},node={nodes}"}
-    print(new_row)
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
     return df
     
