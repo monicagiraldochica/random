@@ -68,20 +68,15 @@ def get_jobInfo_sacct(job_id):
         parts = first_line.split()+second_line.split()[-2:]
     else:
         parts = first_line.split()
-        print(parts)
-        print(len(parts))
         fields = fields[:-2]
-        print(fields)
-        print(len(fields))
-    #if len(parts)<len(fields):
-    #    return pd.DataFrame()
+    if len(parts)<len(fields):
+        return pd.DataFrame()
 
-    #return pd.DataFrame({ "Field": fields, "Value": parts })
+    return pd.DataFrame({ "Field": fields, "Value": parts })
     
-#df = get_jobInfo_sacct(5886414)
-#print(df)
-#df = get_jobInfo_sacct(7777777)
-#print(df)
-#df = get_jobInfo_sacct(5896738)
-#print(df)
-get_jobInfo_sacct(5896738)
+df = get_jobInfo_sacct(5886414)
+print(df)
+df = get_jobInfo_sacct(7777777)
+print(df)
+df = get_jobInfo_sacct(5896738)
+print(df)
