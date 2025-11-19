@@ -50,7 +50,7 @@ def get_jobInfo_sacct(job_id):
 
     try:
         # Run scontrol command
-        result = subprocess.run(["sacct", "-j", str(job_id), f"--format={format_str}", "--noheader"], capture_output=True, text=True, check=True)
+        result = subprocess.run(["sacct", "-j", str(job_id), f"--format={format_str}", "--units=G" , "--noheader"], capture_output=True, text=True, check=True)
 
     except subprocess.CalledProcessError:
         # Job not found or command failed
