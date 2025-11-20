@@ -66,7 +66,7 @@ def get_jobInfo_sacct(job_id):
     if len(output)<3:
         return pd.DataFrame()
     
-    first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split("\t")
+    first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split(" ")
     print(len(fields))
     print(len(first_line))
     print(first_line)
