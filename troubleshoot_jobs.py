@@ -91,9 +91,10 @@ def get_jobInfo_sacct(job_id):
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
 
-    #move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
-    #mask = df['Field'].isin(move_last)
-    #df = pd.concat([df[~mask], df[mask]], ignore_index=True)
+    # Re-order resources lines
+    move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
+    mask = df['Field'].isin(move_last)
+    df = pd.concat([df[~mask], df[mask]], ignore_index=True)
 
     #dic_exitCodes = {
     #    "0:0":"Success",
