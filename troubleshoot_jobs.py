@@ -71,15 +71,14 @@ def get_jobInfo_sacct(job_id):
     if "/" in first_line[1]:
         first_line[1] = f"OOD {os.path.basename(first_line[1])}"
     title_col1 = first_line[1]
-    print(title_col1)
-    #second_line = output[1].split("|")
-    #title_col2 = second_line[1]
-    #third_line = output[2].split("|")
-    #title_col3 = third_line[1]
-    #if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
-    #    return pd.DataFrame()
-    #df = pd.DataFrame({ "Field": fields, title_col1: first_line, title_col2: second_line, title_col3: third_line })
-    #print(df)
+    second_line = output[1].split("|")
+    title_col2 = second_line[1]
+    third_line = output[2].split("|")
+    title_col3 = third_line[1]
+    if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
+        return pd.DataFrame()
+    df = pd.DataFrame({ "Field": fields, title_col1: first_line, title_col2: second_line, title_col3: third_line })
+    print(df)
 
     # Edit DF
     #df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
