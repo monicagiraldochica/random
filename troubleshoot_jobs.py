@@ -51,8 +51,7 @@ def get_jobInfo_sacct(job_id):
     Returns a pandas DataFrame with columns ['Field', 'Value'].
     Returns an empty DataFrame if no sacct data exists yet.
     """
-    #fields = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
-    fields = [ "User", "JobName" ]
+    fields = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
     format_str = ",".join(fields)
 
     try:
@@ -67,9 +66,11 @@ def get_jobInfo_sacct(job_id):
     if len(output)<3:
         return pd.DataFrame()
     
-    print(output[0])
-    #first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split("|")
-    #title_col1 = first_line[1]
+    first_line = output[0].split("|")
+    if "/" in first_line[1]:
+        first_line[1] = f"OOD {first_line[1].split("/")[-1]}"
+    title_col1 = first_line[1]
+    print(title_col1)
     #second_line = output[1].split("|")
     #title_col2 = second_line[1]
     #third_line = output[2].split("|")
