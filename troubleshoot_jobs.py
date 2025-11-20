@@ -56,7 +56,7 @@ def get_jobInfo_sacct(job_id):
 
     try:
         # Run scontrol command
-        result = subprocess.run(["sacct", "-j", str(job_id), f"--format={format_str}", "--units=G" , "--noheader"], capture_output=True, text=True, check=True)
+        result = subprocess.run(["sacct", "-j", str(job_id), f"--format={format_str}", "--units=G" , "--noheader", "--parsable2"], capture_output=True, text=True, check=True)
 
     except subprocess.CalledProcessError:
         # Job not found or command failed
@@ -66,11 +66,11 @@ def get_jobInfo_sacct(job_id):
     if len(output)<3:
         return pd.DataFrame()
     
-    #first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split()
-    second_line = output[1].split()
+    first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split("|")
+    #second_line = output[1].split("|")
     print(len(fields))
-    print(len(second_line))
-    print(second_line)
+    print(len(first_line))
+    print(first_line)
     #third_line = output[2]
     #if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
     #    return pd.DataFrame()
