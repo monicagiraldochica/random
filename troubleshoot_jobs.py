@@ -78,10 +78,9 @@ def get_jobInfo_sacct(job_id):
     if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
         return pd.DataFrame()
     df = pd.DataFrame({ "Field": fields, title_col1: first_line, title_col2: second_line, title_col3: third_line })
-    print(df)
 
     # Edit DF
-    #df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
+    df = df[df["Field"]!="JobName"] #Remove JobName line since it's already the title of each column
     
     #cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
     #mem = df.query("Field=='ReqMem'")["Value"].iloc[0]
@@ -107,7 +106,8 @@ def get_jobInfo_sacct(job_id):
     #    for code,desc in dic_exitCodes.items():
     #        df.loc[df["Field"]==field, "Value"] = df.loc[df["Field"]==field, "Value"].str.replace(code, f"{code} ({desc})")
 
-    #df = df.reset_index(drop=True)
+    df = df.reset_index(drop=True)
+    print(df)
 
     #return df
     
