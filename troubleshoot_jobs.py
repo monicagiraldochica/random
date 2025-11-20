@@ -2,6 +2,7 @@
 import subprocess
 import pandas as pd
 import re
+import os
 
 # Only works for running, queued or recently finished jobs
 def get_jobInfo_scontrol(job_id):
@@ -68,7 +69,7 @@ def get_jobInfo_sacct(job_id):
     
     first_line = output[0].split("|")
     if "/" in first_line[1]:
-        first_line[1] = f"OOD {first_line[1].split("\/")[-1]}"
+        first_line[1] = f"OOD {os.path.basename(first_line[1])}"
     title_col1 = first_line[1]
     print(title_col1)
     #second_line = output[1].split("|")
