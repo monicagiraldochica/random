@@ -39,6 +39,7 @@ def get_jobInfo_scontrol(job_id):
     for col in ["ReqTRES", "AllocTRES"]:
         df.loc[df["Field"]==col, "Value"] = df.loc[df["Field"]==col, "Value"].str.replace(r',billing=.*$', '', regex=True)
     df.loc[df["Field"]=="UserId", "Value"] = df.loc[df["Field"]=="UserId", "Value"].str.replace(r'\(.*$', '', regex=True)
+
     df = df.reset_index(drop=True)
 
     return df
@@ -94,6 +95,19 @@ def get_jobInfo_sacct(job_id):
     mask = df['Field'].isin(move_last)
     df = pd.concat([df[~mask], df[mask]], ignore_index=True)
 
+    dic_exitCodes = {
+        "0:0":"Success",
+        "1:0":"Application error",
+        "0:15":"User cancelled job",
+        "0:9":"Time limit reached, forced kill, OOM, admin kill",
+        "137:0":"Job killed by SIGKILL - could be OOM or timeout",
+        "0:271":"Node failure",
+        "2:0":"CLI or arg parsing error in script"
+    }
+    for field in ["ExitCode", "DerivedExitCode"]:
+        for code,desc in dic_exitCodes.items():
+            df.loc[df["Field"]==field, "Value"] = df.loc[df["Field"]==field, "Value"].str.replace(code, f"{code} ({desc})")
+
     df = df.reset_index(drop=True)
 
     return df
@@ -103,11 +117,11 @@ print(df)
 #df = get_jobInfo_sacct(7777777)
 #print(df)
 print("\n")
-df = get_jobInfo_sacct(5896738)
-print(df)
-    
-#df = get_jobInfo_scontrol(5886414)
+#df = get_jobInfo_sacct(5896738)
 #print(df)
+    
+df = get_jobInfo_scontrol(5886414)
+print(df)
 #df = get_jobInfo_scontrol(7777777)
 #print(df)
 #df = get_jobInfo_scontrol(5896738)
