@@ -92,9 +92,14 @@ def get_jobInfo_sacct(job_id):
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
 
     # Re-order resources lines
-    move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
+    move_last = [ "AllocCPUS", "AveRSS", "MaxRSS" ]
     mask = df['Field'].isin(move_last)
     df = pd.concat([df[~mask], df[mask]], ignore_index=True)
+
+    # Remove the T from the dates
+    job_cols = df.columns.drop('Field')
+    fields_to_fix = [ "Submit", "Start", "End" ]
+    df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace("T", " "))
 
     #dic_exitCodes = {
     #    "0:0":"Success",
