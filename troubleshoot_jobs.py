@@ -101,18 +101,19 @@ def get_jobInfo_sacct(job_id):
     fields_to_fix = [ "Submit", "Start", "End" ]
     df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace("T", " "))
 
-    #dic_exitCodes = {
-    #    "0:0":"Success",
-    #    "1:0":"Application error",
-    #    "0:15":"User cancelled job",
-    #    "0:9":"Time limit reached, forced kill, OOM, admin kill",
-    #    "137:0":"Job killed by SIGKILL - could be OOM or timeout",
-    #    "0:271":"Node failure",
-    #    "2:0":"CLI or arg parsing error in script"
-    #}
-    #for field in ["ExitCode", "DerivedExitCode"]:
-    #    for code,desc in dic_exitCodes.items():
-    #        df.loc[df["Field"]==field, "Value"] = df.loc[df["Field"]==field, "Value"].str.replace(code, f"{code} ({desc})")
+    # Add comment to exit codes
+    dic_exitCodes = {
+        "0:0":"Success",
+        "1:0":"Application error",
+        "0:15":"User cancelled job",
+        "0:9":"Time limit reached, forced kill, OOM, admin kill",
+        "137:0":"Job killed by SIGKILL - could be OOM or timeout",
+        "0:271":"Node failure",
+        "2:0":"CLI or arg parsing error in script"
+    }
+    for field in ["ExitCode", "DerivedExitCode"]:
+        for code,desc in dic_exitCodes.items():
+            df.loc[df["Field"]==field, "Value"] = df.loc[df["Field"]==field, "Value"].str.replace(code, f"{code} ({desc})")
 
     df = df.reset_index(drop=True)
     print(df)
