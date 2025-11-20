@@ -42,7 +42,6 @@ def get_jobInfo_scontrol(job_id):
     df.loc[df["Field"]=="UserId", "Value"] = df.loc[df["Field"]=="UserId", "Value"].str.replace(r'\(.*$', '', regex=True)
 
     df = df.reset_index(drop=True)
-
     return df
 
 # Better to use for failed or completed jobs
@@ -116,16 +115,13 @@ def get_jobInfo_sacct(job_id):
         df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
 
     df = df.reset_index(drop=True)
-    print(df)
-
-    #return df
+    return df
     
 #df = get_jobInfo_scontrol()
 #print(df)
 
-#df = get_jobInfo_sacct(5886414)
-#print(df)
-#print("\n")
-#df = get_jobInfo_sacct(5896738)
-#print(df)
-get_jobInfo_sacct(5896738)
+df = get_jobInfo_sacct(5886414)
+print(df)
+print("\n")
+df = get_jobInfo_sacct(5896738)
+print(df)
