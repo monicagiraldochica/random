@@ -63,7 +63,7 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     output = result.stdout.strip().splitlines()
-    print(output)
+    print(output.replace("sys/dashb+", "sys/dashb+ (ondemand)"))
     if len(output)<3:
         return pd.DataFrame()
     
