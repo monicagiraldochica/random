@@ -72,7 +72,7 @@ def get_jobInfo_sacct(job_id):
     if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
         return pd.DataFrame()
     for line in [first_line, second_line, third_line]:
-        line.replace("sys/dashb+", "sys/dashb+ (ondemand)")
+        line = line.replace("sys/dashb+", "sys/dashb+ (ondemand)")
     print(first_line)
     print(second_line)
     print(third_line)
