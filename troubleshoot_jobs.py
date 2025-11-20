@@ -63,60 +63,62 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     output = result.stdout.strip().splitlines()
+    print(output)
     # If there are no lines, the job is not in accounting DB yet
-    if len(output)==0:
-        return pd.DataFrame()
+    #if len(output)==0:
+    #    return pd.DataFrame()
     
-    first_line = output[0]
-    second_line = output[1] if len(output)>1 else None
-    if (first_line is None) or (second_line is None):
-        return pd.DataFrame()
+    #first_line = output[0]
+    #second_line = output[1] if len(output)>1 else None
+    #if (first_line is None) or (second_line is None):
+    #    return pd.DataFrame()
     
-    if first_line.split()[1]!="RUNNING":
-        parts = first_line.split()+second_line.split()[-2:]
-    else:
-        parts = first_line.split()
-        fields = fields[:-2]
-    if len(parts)<len(fields):
-        return pd.DataFrame()
+    #if first_line.split()[1]!="RUNNING":
+    #    parts = first_line.split()+second_line.split()[-2:]
+    #else:
+    #    parts = first_line.split()
+    #    fields = fields[:-2]
+    #if len(parts)<len(fields):
+    #    return pd.DataFrame()
     
     # Edit DF
-    df = pd.DataFrame({ "Field": fields, "Value": parts })
-    df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
+    #df = pd.DataFrame({ "Field": fields, "Value": parts })
+    #df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
     
-    cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
-    mem = df.query("Field=='ReqMem'")["Value"].iloc[0]
-    nodes = len(df.query("Field=='NodeList'")["Value"].iloc[0].split(","))
-    new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus},mem={mem},node={nodes}"}
-    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
+    #cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
+    #mem = df.query("Field=='ReqMem'")["Value"].iloc[0]
+    #nodes = len(df.query("Field=='NodeList'")["Value"].iloc[0].split(","))
+    #new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus},mem={mem},node={nodes}"}
+    #df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    #df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
 
-    move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
-    mask = df['Field'].isin(move_last)
-    df = pd.concat([df[~mask], df[mask]], ignore_index=True)
+    #move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
+    #mask = df['Field'].isin(move_last)
+    #df = pd.concat([df[~mask], df[mask]], ignore_index=True)
 
-    dic_exitCodes = {
-        "0:0":"Success",
-        "1:0":"Application error",
-        "0:15":"User cancelled job",
-        "0:9":"Time limit reached, forced kill, OOM, admin kill",
-        "137:0":"Job killed by SIGKILL - could be OOM or timeout",
-        "0:271":"Node failure",
-        "2:0":"CLI or arg parsing error in script"
-    }
-    for field in ["ExitCode", "DerivedExitCode"]:
-        for code,desc in dic_exitCodes.items():
-            df.loc[df["Field"]==field, "Value"] = df.loc[df["Field"]==field, "Value"].str.replace(code, f"{code} ({desc})")
+    #dic_exitCodes = {
+    #    "0:0":"Success",
+    #    "1:0":"Application error",
+    #    "0:15":"User cancelled job",
+    #    "0:9":"Time limit reached, forced kill, OOM, admin kill",
+    #    "137:0":"Job killed by SIGKILL - could be OOM or timeout",
+    #    "0:271":"Node failure",
+    #    "2:0":"CLI or arg parsing error in script"
+    #}
+    #for field in ["ExitCode", "DerivedExitCode"]:
+    #    for code,desc in dic_exitCodes.items():
+    #        df.loc[df["Field"]==field, "Value"] = df.loc[df["Field"]==field, "Value"].str.replace(code, f"{code} ({desc})")
 
-    df = df.reset_index(drop=True)
+    #df = df.reset_index(drop=True)
 
-    return df
+    #return df
     
-df = get_jobInfo_scontrol(5896738)
-print(df)
+#df = get_jobInfo_scontrol()
+#print(df)
 
-df = get_jobInfo_sacct(5886414)
-print(df)
-print("\n")
-df = get_jobInfo_sacct(5896738)
-print(df)
+#df = get_jobInfo_sacct(5886414)
+#print(df)
+#print("\n")
+#df = get_jobInfo_sacct(5896738)
+#print(df)
+get_jobInfo_sacct(5896738)
