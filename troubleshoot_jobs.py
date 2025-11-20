@@ -83,10 +83,10 @@ def get_jobInfo_sacct(job_id):
     df = df[df["Field"]!="JobName"] #Remove JobName line since it's already the title of each column
     
     # Merge Req resources lines into one
-    cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
-    mem = df.query("Field=='ReqMem'")["Value"].iloc[0]
-    nodes = len(df.query("Field=='NodeList'")["Value"].iloc[0].split(","))
-    new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus},mem={mem},node={nodes}"}
+    cpus = df.query("Field=='ReqCPUS'")[title_col1].iloc[0]
+    mem = df.query("Field=='ReqMem'")[title_col1].iloc[0]
+    nodes = len(df.query("Field=='NodeList'")[title_col1].iloc[0].split(","))
+    new_row = {"Field": "ReqTRES", title_col1:f"cpu={cpus},mem={mem},node={nodes}"}
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
 
