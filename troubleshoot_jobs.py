@@ -82,7 +82,7 @@ def get_jobInfo_sacct(job_id):
     
     # Merge Req resources lines into one
     new_vals = []
-    for i in range(3):
+    for i in range(len(titles)):
         cpus = df.query("Field=='ReqCPUS'")[titles[i]].iloc[0]
         mem = df.query("Field=='ReqMem'")[titles[i]].iloc[0]
         nodes = len(df.query("Field=='NodeList'")[titles[i]].iloc[0].split(","))
