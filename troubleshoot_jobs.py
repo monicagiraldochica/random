@@ -51,7 +51,7 @@ def get_jobInfo_sacct(job_id):
     Returns a pandas DataFrame with columns ['Field', 'Value'].
     Returns an empty DataFrame if no sacct data exists yet.
     """
-    fields = [ "User", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "JobName", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
+    fields = [ "User", "JobName", "State", "ExitCode", "DerivedExitCode", "Elapsed", "Timelimit", "Submit", "Start", "End", "Partition", "NodeList", "WorkDir", "ReqCPUS", "AllocCPUS", "ReqMem", "AveRSS", "MaxRSS" ]
     format_str = ",".join(fields)
 
     try:
@@ -63,15 +63,15 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     output = result.stdout.strip().splitlines()
-    print(output)
-    # If there are no lines, the job is not in accounting DB yet
-    #if len(output)==0:
-    #    return pd.DataFrame()
+    if len(output)<3:
+        return pd.DataFrame()
     
-    #first_line = output[0]
-    #second_line = output[1] if len(output)>1 else None
-    #if (first_line is None) or (second_line is None):
-    #    return pd.DataFrame()
+    first_line = output[0]
+    second_line = output[1]
+    third_line = output[2]
+    print(first_line)
+    print(second_line)
+    print(third_line)
     
     #if first_line.split()[1]!="RUNNING":
     #    parts = first_line.split()+second_line.split()[-2:]
