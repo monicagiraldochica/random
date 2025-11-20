@@ -66,17 +66,18 @@ def get_jobInfo_sacct(job_id):
     if len(output)<3:
         return pd.DataFrame()
     
-    first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split("|")
-    title_col1 = first_line[1]
-    second_line = output[1].split("|")
-    title_col2 = second_line[1]
-    third_line = output[2].split("|")
-    title_col3 = third_line[1]
-    if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
-        return pd.DataFrame()
-    df = pd.DataFrame({ "Field": fields, title_col1: first_line, title_col2: second_line, title_col3: third_line })
-    print(df)
-    
+    print(output[0])
+    #first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split("|")
+    #title_col1 = first_line[1]
+    #second_line = output[1].split("|")
+    #title_col2 = second_line[1]
+    #third_line = output[2].split("|")
+    #title_col3 = third_line[1]
+    #if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
+    #    return pd.DataFrame()
+    #df = pd.DataFrame({ "Field": fields, title_col1: first_line, title_col2: second_line, title_col3: third_line })
+    #print(df)
+
     # Edit DF
     #df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
     
