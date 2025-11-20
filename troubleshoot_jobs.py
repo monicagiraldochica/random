@@ -66,19 +66,17 @@ def get_jobInfo_sacct(job_id):
     if len(output)<3:
         return pd.DataFrame()
     
-    first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)")
-    second_line = output[1]
-    third_line = output[2]
-    if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
-        return pd.DataFrame()
-    #for line in [first_line, second_line, third_line]:
-    #    line[1] = line.replace("sys/dashb+", "sys/dashb+ (ondemand)")
+    first_line = output[0].replace("sys/dashb+", "sys/dashb+ (ondemand)").split("\t")
+    print(len(fields))
+    print(len(first_line))
     print(first_line)
-    #print(second_line)
-    #print(third_line)
+    #second_line = output[1]
+    #third_line = output[2]
+    #if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
+    #    return pd.DataFrame()
     
     # Edit DF
-    #df = pd.DataFrame({ "Field": fields, "Value": parts })
+    #df = pd.DataFrame({ "Field": fields, f"Value\n{}": parts })
     #df.loc[df["Field"]=="JobName", "Value"] = df.loc[df["Field"]=="JobName", "Value"].str.replace("sys/dashb+", "sys/dashb+ (ondemand)")
     
     #cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
