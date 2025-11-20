@@ -82,12 +82,13 @@ def get_jobInfo_sacct(job_id):
     # Edit DF
     df = df[df["Field"]!="JobName"] #Remove JobName line since it's already the title of each column
     
-    #cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
-    #mem = df.query("Field=='ReqMem'")["Value"].iloc[0]
-    #nodes = len(df.query("Field=='NodeList'")["Value"].iloc[0].split(","))
-    #new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus},mem={mem},node={nodes}"}
-    #df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-    #df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
+    # Merge Req resources lines into one
+    cpus = df.query("Field=='ReqCPUS'")["Value"].iloc[0]
+    mem = df.query("Field=='ReqMem'")["Value"].iloc[0]
+    nodes = len(df.query("Field=='NodeList'")["Value"].iloc[0].split(","))
+    new_row = {"Field": "ReqTRES", "Value":f"cpu={cpus},mem={mem},node={nodes}"}
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
 
     #move_last = ["AllocCPUS", "AveRSS", "MaxRSS"]
     #mask = df['Field'].isin(move_last)
