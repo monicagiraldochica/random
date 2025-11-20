@@ -102,6 +102,7 @@ def get_jobInfo_sacct(job_id):
     df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace("T", " "))
 
     # Add comment to exit codes
+    fields_to_fix = [ "ExitCode", "DerivedExitCode" ]
     dic_exitCodes = {
         "0:0":"Success",
         "1:0":"Application error",
@@ -111,9 +112,8 @@ def get_jobInfo_sacct(job_id):
         "0:271":"Node failure",
         "2:0":"CLI or arg parsing error in script"
     }
-    #for field in ["ExitCode", "DerivedExitCode"]:
-    #    for code,desc in dic_exitCodes.items():
-    #        df.loc[df["Field"]==field, job_cols] = df.loc[df["Field"]==field, job_cols].str.replace(code, f"{code} ({desc})")
+    for code,desc in dic_exitCodes.items():
+        df.loc[df['Field'].isin(fields_to_fix), job_cols] = df.loc[df['Field'].isin(fields_to_fix), job_cols].apply(lambda col: col.str.replace(code, f"{code} ({desc})"))
 
     df = df.reset_index(drop=True)
     print(df)
