@@ -70,23 +70,24 @@ def get_jobInfo_sacct(job_id):
     first_line = output[0].split("|")
     if "/" in first_line[1]:
         first_line[1] = f"OOD {os.path.basename(first_line[1])}"
-    title_col1 = first_line[1]
     second_line = output[1].split("|")
-    title_col2 = second_line[1]
     third_line = output[2].split("|")
-    title_col3 = third_line[1]
+    titles = [first_line[1], second_line[1], third_line[1]]
     if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
         return pd.DataFrame()
-    df = pd.DataFrame({ "Field": fields, title_col1: first_line, title_col2: second_line, title_col3: third_line })
+    df = pd.DataFrame({ "Field": fields, titles[0]: first_line, titles[1]: second_line, titles[2]: third_line })
 
     # Edit DF
     df = df[df["Field"]!="JobName"] #Remove JobName line since it's already the title of each column
     
     # Merge Req resources lines into one
-    cpus = df.query("Field=='ReqCPUS'")[title_col1].iloc[0]
-    mem = df.query("Field=='ReqMem'")[title_col1].iloc[0]
-    nodes = len(df.query("Field=='NodeList'")[title_col1].iloc[0].split(","))
-    new_row = {"Field": "ReqTRES", title_col1:f"cpu={cpus},mem={mem},node={nodes}"}
+    new_vals = []
+    for i in range(2):
+        cpus = df.query("Field=='ReqCPUS'")[titles[i]].iloc[0]
+        mem = df.query("Field=='ReqMem'")[titles[i]].iloc[0]
+        nodes = len(df.query("Field=='NodeList'")[titles[i]].iloc[0].split(","))
+        new_vals+=[f"cpu={cpus},mem={mem},node={nodes}"]
+    new_row = { "Field": "ReqTRES", titles[0]:new_vals[0], titles[1]:new_vals[1], titles[2]:new_vals[2] }
     df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
     df = df[~df['Field'].isin(["ReqMem", "ReqCPUS"])]
 
