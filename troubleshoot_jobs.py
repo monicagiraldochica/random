@@ -113,7 +113,7 @@ def get_jobInfo_sacct(job_id):
     }
     for field in ["ExitCode", "DerivedExitCode"]:
         for code,desc in dic_exitCodes.items():
-            df.loc[df["Field"]==field, "Value"] = df.loc[df["Field"]==field, "Value"].str.replace(code, f"{code} ({desc})")
+            df.loc[df["Field"]==field, job_cols] = df.loc[df["Field"]==field, job_cols].str.replace(code, f"{code} ({desc})")
 
     df = df.reset_index(drop=True)
     print(df)
