@@ -68,7 +68,7 @@ def get_jobInfo_sacct(job_id):
     
     first_line = output[0].split("|")
     if "/" in first_line[1]:
-        first_line[1] = f"OOD {first_line[1].split("/")[-1]}"
+        first_line[1] = f"OOD {first_line[1].split("\/")[-1]}"
     title_col1 = first_line[1]
     print(title_col1)
     #second_line = output[1].split("|")
