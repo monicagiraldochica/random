@@ -111,9 +111,9 @@ def get_jobInfo_sacct(job_id):
         "0:271":"Node failure",
         "2:0":"CLI or arg parsing error in script"
     }
-    for field in ["ExitCode", "DerivedExitCode"]:
-        for code,desc in dic_exitCodes.items():
-            df.loc[df["Field"]==field, job_cols] = df.loc[df["Field"]==field, job_cols].str.replace(code, f"{code} ({desc})")
+    #for field in ["ExitCode", "DerivedExitCode"]:
+    #    for code,desc in dic_exitCodes.items():
+    #        df.loc[df["Field"]==field, job_cols] = df.loc[df["Field"]==field, job_cols].str.replace(code, f"{code} ({desc})")
 
     df = df.reset_index(drop=True)
     print(df)
