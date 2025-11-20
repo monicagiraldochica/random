@@ -63,23 +63,15 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     
     output = result.stdout.strip().splitlines()
+    print(output)
     if len(output)<3:
         return pd.DataFrame()
     
     first_line = output[0]
     second_line = output[1]
     third_line = output[2]
-    print(first_line)
-    print(second_line)
-    print(third_line)
-    
-    #if first_line.split()[1]!="RUNNING":
-    #    parts = first_line.split()+second_line.split()[-2:]
-    #else:
-    #    parts = first_line.split()
-    #    fields = fields[:-2]
-    #if len(parts)<len(fields):
-    #    return pd.DataFrame()
+    if len(first_line)<len(fields) or len(second_line)<len(fields) or len(third_line)<len(fields):
+        return pd.DataFrame()
     
     # Edit DF
     #df = pd.DataFrame({ "Field": fields, "Value": parts })
