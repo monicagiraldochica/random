@@ -73,9 +73,9 @@ def get_jobInfo_sacct(job_id):
         return pd.DataFrame()
     for line in [first_line, second_line, third_line]:
         line.replace("sys/dashb+", "sys/dashb+ (ondemand)")
-        print(first_line)
-        print(second_line)
-        print(third_line)
+    print(first_line)
+    print(second_line)
+    print(third_line)
     
     # Edit DF
     #df = pd.DataFrame({ "Field": fields, "Value": parts })
