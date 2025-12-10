@@ -239,17 +239,18 @@ def reEnableGroup(ldap_setup,piID,conn):
 	else:
 		exitError(conn, f"Failed to change DN: {conn.result}")
 
-def sanitize_text(value, capitalize=False):
+def sanitize_text(value, capitalize=False, allow_dash=False):
 	"""Remove non-alphanumeric characters and normalize capitalization."""
 	if value is None:
 		return None
 	
-	value = re.sub(r'[^a-zA-Z0-9\s]', '', value.strip())
+	pattern = r'[^a-zA-Z0-9\s-]' if allow_dash else r'[^a-zA-Z0-9\s]'
+	value = re.sub(pattern, '', value.strip())
 
 	if value=="":
 		return None	
 	
-	return value.capitalize() if capitalize else value
+	return value.title() if capitalize else value
 
 def process_requestFile(request_file):
 	netID = piID = first_name = last_name = email = alt_contact = None
@@ -316,7 +317,7 @@ def parse_arguments():
 	netID = sanitize_text(netID)
 	piID = sanitize_text(piID)
 	first_name = sanitize_text(first_name, capitalize=True)
-	last_name = sanitize_text(last_name, capitalize=True)
+	last_name = sanitize_text(last_name, capitalize=True, allow_dash=True)
 	email = email.strip()
 	alt_contact = sanitize_text(alt_contact)
 
@@ -432,7 +433,7 @@ def main():
 		createUser(ldap_setup,netID,uidNumber,gidNumber,first_name,last_name,email,conn)
 		userInfo = myldaplib.getUserInfo(conn,netID,ldap_setup)
 		printLDAPdic(userInfo.pop("dn"),userInfo)
-		if input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort ['y' to abort, 'n' to continue]: ")=='y':
+		if input("Looks OK? [y]: ")!="y" and input("Are you sure there are errors? Program will abort [y]: ")=='y':
 			exitError(conn, "User created with errors")
 
 	# If it's not a PI, add user to the new group

@@ -1,0 +1,5 @@
+3.8M	mkeith	./.git
+1.9M	mkeith	./software-list-generator
+284K	mkeith	./timeSeriesAnalysis
+176K	mkeith	./OOD
+92K	mkeith	./XNAT
