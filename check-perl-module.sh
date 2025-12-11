@@ -106,6 +106,13 @@ if ! command -v perl >/dev/null 2>&1; then
   exit 3
 fi
 
+# Require Perl exactly 5.42.0
+if ! perl -e 'exit(($^V eq v5.42.0) ? 0 : 1)'; then
+  echo "Error: This script requires Perl 5.42.0 exactly (found $^V)." >&2
+  perl -e 'print "Found Perl version: ", $^V, "\n"'
+  exit 3
+fi
+
 # Check installation and print version
 if check_installed $module; then
   echo "Installed"
