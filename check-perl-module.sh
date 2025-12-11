@@ -107,7 +107,12 @@ if ! command -v perl >/dev/null 2>&1; then
 fi
 
 # Check installation and print version
-check_installed $module && echo "Installed" || echo "Not installed"
+if check_installed $module; then
+  echo "Installed"
+else
+  echo "Not installed"
+  exit 1
+fi
 
 # Optionally print path (best-effort)
 if [[ "${print_path}" ]]; then
