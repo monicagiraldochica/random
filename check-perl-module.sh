@@ -70,6 +70,8 @@ check_installed(){
 
   perl -e '
     my ($m, $show) = @ARGV;
+    my $err = "";
+    my $ok;
 
     # Convert Module::Name -> Module/Name.pm for require()
     my $file = $m;
@@ -77,8 +79,38 @@ check_installed(){
     $file .= ".pm";
 
     # Try to require the file; show full error on failure
-    eval { require $file; 1 }
-      or do { print $@ if ($show); exit 1; };
+    $ok = eval { require $file; 1 };
+    $err = $@ unless $ok;
+
+    # Try to load parent module first if it failed
+    if (!$ok) {
+      my @parts = split /::/, $m;
+      if (@parts > 1) {
+        my $parent = join("::", @parts[0..$#parts-1]);
+        $ok = eval "require $parent; 1";
+        $err = $@ unless $ok;
+        if ($ok) {
+          $ok = eval "require $m; 1";
+          $err = $@ unless $ok;
+        }
+        else{
+          # Even if parent failed, still try the module directly
+          $ok = eval "require $m; 1";
+          $err = $@ unless $ok;
+        }
+      }
+      # No parent namespace: just try module semantic
+      else{
+        $ok = eval "require $m; 1";
+        $err = $@ unless $ok;
+      }
+    }
+    
+    # If loading failed after both strategies, report and exit 1
+    if (!$ok) {
+      print STDERR $err if ($show);
+      exit 1;
+    }
 
     # Module loaded; try to get version via method or package var
     my $version = eval { $m->VERSION } // do {
