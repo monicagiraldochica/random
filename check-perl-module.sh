@@ -61,7 +61,7 @@ parse_args(){
 # If module can be required, try to print the version
 check_installed(){
   local module="$1"
-  local show="$2" # "1" to show error details, "0" otherwise
+  local show="$2" # "1"= show error details, "0"= quiet
 
   if [[ -z "$module" ]]; then
     echo "Error: module name required" >&2
@@ -76,11 +76,11 @@ check_installed(){
     $file =~ s{::}{/}g;
     $file .= ".pm";
 
-    # Try to require the module and capture full error on failure
+    # Try to require the file; show full error on failure
     eval { require $file; 1 }
       or do { print $@ if ($show); exit 1; };
 
-    # If we got here, the module loaded; try to get version
+    # Module loaded; try to get version via method or package var
     my $version = eval { $m->VERSION } // do {
       no strict "refs";
       ${"${m}::VERSION"};
