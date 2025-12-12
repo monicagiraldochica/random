@@ -78,17 +78,30 @@ check_installed(){
     $file =~ s{::}{/}g;
     $file .= ".pm";
 
-    # Try to require the file; show full error on failure
+    # Compute parent names/filenames (if any) 
+    my @parts = split /::/, $m;
+    my ($parent, $parent_file);
+    if (@parts > 1) {
+      $parent = join("::", @parts[0..$#parts-1]);             # e.g., Log::Report
+      $parent_file = join("/", @parts[0..$#parts-1]) . ".pm"; # e.g., Log/Report.pm
+    }
+
+    # Try to require by filename
     $ok = eval { require $file; 1 };
     $err = $@ unless $ok;
 
     # Try to load parent module first if it failed
     if (!$ok) {
-      my @parts = split /::/, $m;
-      if (@parts > 1) {
-        my $parent = join("::", @parts[0..$#parts-1]);
+      # Clear any partial loads so we can retry cleanly
+      delete $INC{$file};
+      delete $INC{$parent_file} if defined $parent_file;
+
+      if (defined $parent) {
+        # Load parent first
         $ok = eval "require $parent; 1";
         $err = $@ unless $ok;
+
+        # Then load the requested module
         if ($ok) {
           $ok = eval "require $m; 1";
           $err = $@ unless $ok;
@@ -99,6 +112,7 @@ check_installed(){
           $err = $@ unless $ok;
         }
       }
+
       # No parent namespace: just try module semantic
       else{
         $ok = eval "require $m; 1";
