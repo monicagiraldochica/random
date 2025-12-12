@@ -73,6 +73,9 @@ check_installed(){
     my $err = "";
     my $ok;
 
+    # Globally silence only "redefine" warnings in this checker run
+    no warnings "redefine";
+
     # Convert Module::Name -> Module/Name.pm for require()
     my $file = $m;
     $file =~ s{::}{/}g;
@@ -90,39 +93,34 @@ check_installed(){
     $ok = eval { require $file; 1 };
     $err = $@ unless $ok;
 
-    # local scope: silence only 'redefine' warnings during retry
-    {
-      no warnings "redefine";
-      
-      # Try to load parent module first if it failed
-      if (!$ok) {
-        # Clear any partial loads so we can retry cleanly
-        delete $INC{$file};
-        delete $INC{$parent_file} if defined $parent_file;
+    # Try to load parent module first if it failed
+    if (!$ok) {
+      # Clear any partial loads so we can retry cleanly
+      delete $INC{$file};
+      delete $INC{$parent_file} if defined $parent_file;
 
-        if (defined $parent) {
-          # Load parent first
-          $ok = eval "require $parent; 1";
-          $err = $@ unless $ok;
+      if (defined $parent) {
+        # Load parent first
+        $ok = eval "require $parent; 1";
+        $err = $@ unless $ok;
 
-          # Then load the requested module
-          if ($ok) {
-            $ok = eval "require $m; 1";
-            $err = $@ unless $ok;
-          }
-          else{
-            # Even if parent failed, still try the module directly
-            $ok = eval "require $m; 1";
-            $err = $@ unless $ok;
-          }
-        }
-
-        # No parent namespace: just try module semantic
-        else{
+        # Then load the requested module
+        if ($ok) {
           $ok = eval "require $m; 1";
           $err = $@ unless $ok;
         }
-      } # end local scope
+        else{
+          # Even if parent failed, still try the module directly
+          $ok = eval "require $m; 1";
+          $err = $@ unless $ok;
+        }
+      }
+
+      # No parent namespace: just try module semantic
+      else{
+        $ok = eval "require $m; 1";
+        $err = $@ unless $ok;
+      }
     }
     
     # If loading failed after both strategies, report and exit 1
