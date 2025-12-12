@@ -347,7 +347,7 @@ def parse_arguments():
 		alt_contact = input("Alternative contact ([Enter if none]): ")
 		if alt_contact and not alt_contact.endswith("@mcw.edu"):
 			sys.exit("Error: Alternative contact must be an MCW email")
-	elif not isPI and ealt_contact:
+	elif not isPI and alt_contact:
 		print("Warning: Alternative contact provided, but user is not a PI. Ignoring input.")
 		alt_contact = None
 
