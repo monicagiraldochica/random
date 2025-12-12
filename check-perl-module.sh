@@ -71,12 +71,14 @@ check_installed(){
   perl -e '
     my ($m, $show) = @ARGV;
 
+    # Convert Module::Name -> Module/Name.pm for require()
+    my $file = $m;
+    $file =~ s{::}{/}g;
+    $file .= ".pm";
+
     # Try to require the module and capture full error on failure
-    eval { require $m; 1 }
-      or do {
-        print $@ if ($show);
-        exit 1;
-      };
+    eval { require $file; 1 }
+      or do { print $@ if ($show); exit 1; };
 
     # If we got here, the module loaded; try to get version
     my $version = eval { $m->VERSION } // do {
