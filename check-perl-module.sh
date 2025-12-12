@@ -1,18 +1,4 @@
 #!/usr/bin/env bash
-
-# check-perl-module: Check if a Perl module is installed, print its version,
-# and optionally its installation path (via perldoc).
-
-# Exit codes:
-# 0 module is installed
-# 1 module is not installed
-# 2 usage error
-# 3 perl not found
-
-# Usage:
-# check-perl-module Module::Name
-# check-perl-module -p Module::Name     # also print path
-
 set -euo pipefail
 
 show_usage() {
@@ -20,14 +6,15 @@ show_usage() {
 Usage:
   check-perl-module Module::Name
   check-perl-module -p Module::Name   # also print module path
+  check-perl-module -E Module::Name   # on failure, show full Perl load error
 
 Description:
-  Loads the module using `require` (does NOT call import), prints its version
-  if available (or "unknown"), and exits 0 if installed, 1 if not installed.
+  Check if a Perl module is installed, print its version, and optionally its installation path (via perldoc).
 
 Options:
-  -p   Also print the module's installation path (uses `perldoc -l` if available).
-  -h   Show this help.
+  -p, --path        Also print the module's installation path (uses `perldoc -l` if available).
+  -E, --show-error  When module fails to load, print Perl's full error.
+  -h, --help        Show this help.
 
 Exit codes:
   0  installed
@@ -53,6 +40,10 @@ parse_args(){
         print_path=true
         shift
         ;;
+      -E|--show-error)
+        show_error=1
+        shift
+        ;;
       -*)
         echo "Unknown option: ${1}" >&2
         show_usage
@@ -70,15 +61,24 @@ parse_args(){
 # If module can be required, try to print the version
 check_installed(){
   local module="$1"
+  local show="$2" # "1" to show error details, "0" otherwise
+
   if [[ -z "$module" ]]; then
     echo "Error: module name required" >&2
     exit 2
   fi
 
   perl -e '
-    my $m = shift; 
-    eval "require $m" or exit 1;
+    my ($m, $show) = @ARGV;
 
+    # Try to require the module and capture full error on failure
+    eval { require $m; 1 }
+      or do {
+        print $@ if ($show);
+        exit 1;
+      };
+
+    # If we got here, the module loaded; try to get version
     my $version = eval { $m->VERSION } // do {
       no strict "refs";
       ${"${m}::VERSION"};
@@ -86,10 +86,11 @@ check_installed(){
 
     print((defined $version ? $version : "version not available"), "\n");
     exit 0
-  ' "$module"
+  ' "$module" "$show"
 }
 
 print_path=false
+show_error=0
 module=""
 
 parse_args "$@"
@@ -114,15 +115,19 @@ if ! perl -e 'exit(($^V eq v5.42.0) ? 0 : 1)'; then
 fi
 
 # Check installation and print version
-if check_installed $module; then
+if check_installed "$module" "$show_error"; then
   echo "Installed"
 else
-  echo "Not installed"
-  exit 1
+  if [[ "$show_error" -eq 1 ]]; then
+    exit 1
+  else  
+    echo "Not installed"
+    exit 1
+  fi
 fi
 
 # Optionally print path (best-effort)
-if [[ "${print_path}" ]]; then
+if [[ "${print_path}" == true ]]; then
   if command -v perldoc >/dev/null 2>&1; then
     path="$(perldoc -l "${module}" 2>/dev/null || true)"
     if [[ -n "${path}" ]]; then
