@@ -245,11 +245,11 @@ def sanitize_text(value, capitalize=False, allow_dash=False, allow_at=False):
 		return None
 	
 	if allow_dash and allow_at:
-		pattern = r'[^a-zA-Z0-9@-]'
+		pattern = r'[^a-zA-Z0-9@.-]'
 	elif allow_dash:
 		pattern = r'[^a-zA-Z0-9-]'
 	elif allow_at:
-		pattern = r'[^a-zA-Z0-9@]'
+		pattern = r'[^a-zA-Z0-9@.]'
 	else:
 		pattern = r'[^a-zA-Z0-9]'
 	value = re.sub(pattern, '', value.strip())
@@ -339,7 +339,7 @@ def parse_arguments():
 		sys.exit("Error: Missing arguments")
 
 	if not email.endswith("@mcw.edu"):
-		sys.exit("Error: email must be from MCW")
+		sys.exit(f"Error: email ({email}) must be from MCW")
 
 	# Check optional fields
 	isPI = (netID == piID)
