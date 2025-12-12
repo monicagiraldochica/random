@@ -325,8 +325,8 @@ def parse_arguments():
 	piID = sanitize_text(piID)
 	first_name = sanitize_text(first_name, capitalize=True)
 	last_name = sanitize_text(last_name, capitalize=True, allow_dash=True)
-	email = email.strip()
-	alt_contact = sanitize_text(alt_contact)
+	email = sanitize_text(email, allow_at=True)
+	alt_contact = sanitize_text(alt_contact, allow_at=True)
 
 	# Check required fields
 	if not netID or not piID or not first_name or not last_name or not email:
@@ -342,7 +342,7 @@ def parse_arguments():
 		alt_contact = input("Alternative contact ([Enter if none]): ")
 		if alt_contact and not alt_contact.endswith("@mcw.edu"):
 			sys.exit("Error: Alternative contact must be an MCW email")
-	elif not isPI and alt_contact:
+	elif not isPI and ealt_contact:
 		print("Warning: Alternative contact provided, but user is not a PI. Ignoring input.")
 		alt_contact = None
 
