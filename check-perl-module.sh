@@ -73,8 +73,11 @@ check_installed(){
     my $err = "";
     my $ok;
 
-    # Globally silence only "redefine" warnings in this checker run
-    no warnings "redefine";
+    # Selectively suppress only "Subroutine ... redefined" warnings 
+    local $SIG{__WARN__} = sub {
+      return if $_[0] =~ /\bSubroutine .* redefined\b/;
+      warn $_[0];
+    };
 
     # Convert Module::Name -> Module/Name.pm for require()
     my $file = $m;
