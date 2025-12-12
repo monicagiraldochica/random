@@ -260,7 +260,7 @@ def sanitize_text(value, capitalize=False, allow_dash=False, allow_at=False):
 	return value.title() if capitalize else value
 
 def process_requestFile(request_file):
-	netID = piID = first_name = last_name = email = alt_contact = None
+	netID = piID = first_name = last_name = email = alt_contact = role = None
 	consult = False
 
 	try:
@@ -276,12 +276,17 @@ def process_requestFile(request_file):
 					netID = (line.replace("NetID: ","").strip() or None)
 				elif line.startswith("Email: "):
 					email = (line.replace("Email: ","").strip() or None)
+				elif line.startswith("Role: "):
+					role = (line.replace("Role: ","").strip() or None)
 				elif line.startswith("PI_NetID: "):
 					piID = (line.replace("PI_NetID: ","").strip() or None)
 				elif line.startswith("Alt_Contact: "):
 					alt_contact = (line.replace("Alt_Contact: ","").strip() or None)
 				elif line.startswith("Consult?:"):
 					consult = line.replace("Consult?:","")=="Yes"
+
+				if role == "Faculty" and piID is None and netID is not None:
+					piID = netID
 
 	except FileNotFoundError:
 		print(f"Error: The file '{request_file}' does not exist.")
