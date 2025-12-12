@@ -239,12 +239,19 @@ def reEnableGroup(ldap_setup,piID,conn):
 	else:
 		exitError(conn, f"Failed to change DN: {conn.result}")
 
-def sanitize_text(value, capitalize=False, allow_dash=False):
+def sanitize_text(value, capitalize=False, allow_dash=False, allow_at=False):
 	"""Remove non-alphanumeric characters and normalize capitalization."""
 	if value is None:
 		return None
 	
-	pattern = r'[^a-zA-Z0-9\s-]' if allow_dash else r'[^a-zA-Z0-9\s]'
+	if allow_dash and allow_at:
+		pattern = r'[^a-zA-Z0-9@-]'
+	elif allow_dash:
+		pattern = r'[^a-zA-Z0-9-]'
+	elif allow_at:
+		pattern = r'[^a-zA-Z0-9@]'
+	else:
+		pattern = r'[^a-zA-Z0-9]'
 	value = re.sub(pattern, '', value.strip())
 
 	if value=="":
