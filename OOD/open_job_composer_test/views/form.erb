@@ -203,6 +203,10 @@ function rebuildWithSbatchHeader(currentText, headerText) {
     const rest = lines.slice(1).join('\n').trim();
     return [shebang, header, rest].filter(s => s && s !== '').join('\n\n');
   }
+
+  // No shebang: put header at top and keep all user text below
+  const body = current.trim();
+  return [header, body].filter(s => s && s !== '').join('\n\n');
 }
 
 ocForm.isFirst = true;
