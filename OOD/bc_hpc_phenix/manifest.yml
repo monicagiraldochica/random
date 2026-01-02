@@ -1,7 +1,0 @@
----
-name: Phenix
-category: Interactive Apps
-subcategory: HPC Cluster
-role: batch_connect
-description: |
-  This app will launch Phenix on a cluster node.
