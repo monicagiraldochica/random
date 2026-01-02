@@ -157,6 +157,21 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
+// ------------------------------------------------------------
+// Header helper: rewrite ONLY lines that start with "#SBATCH"
+// ------------------------------------------------------------
+// - Finds all existing header lines (those starting with "#SBATCH")
+// - Replaces them with the newly generated header text
+// - Preserves everything else (shebang, comments, user code
+// - If there is no existing "#SBATCH" header:
+//    * If a shebang ("#!/") is present on the first line, the header is inserted right after it.
+//    * Otherwise, the header is inserted at the very top.
+function rebuildWithSbatchHeader(currentText, headerText) {
+  const current = (currentText ?? '').toString();
+  const header  = (headerText ?? '').toString();
+  const lines   = current.split('\n')
+}
+
 ocForm.isFirst = true;
 ocForm.multiSelectDisabledIndexes = {};
 ocForm.updateValues = function(fromId) {
