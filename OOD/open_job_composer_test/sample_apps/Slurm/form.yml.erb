@@ -182,6 +182,7 @@ form:
 
 script: |
   #!/bin/bash
+  ### BEGIN HEADER ###
   #SBATCH --account=#{account}
   #SBATCH --partition=#{partition}
   #SBATCH --nodes=#{nodes_tasks_1}
@@ -195,6 +196,7 @@ script: |
   #SBATCH --mail-user=#{email}
   #SBATCH --mail-type=#{mail_option}
   #SBATCH --array=#{array_1}-#{array_2}
+  ### END HEADER ###
 
 check: |
   index1_int = @array_1.to_i
