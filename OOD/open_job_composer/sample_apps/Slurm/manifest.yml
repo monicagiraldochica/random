@@ -1,0 +1,8 @@
+---
+name: SLURM Job Script
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Slurm_logo.svg/262px-Slurm_logo.svg.png
+description: |
+  This application generates and submits a Slurm job script. 
+  <br>You can find help on writing scripts in our <a href="https://docs.rcc.mcw.edu/cluster/jobs/running-jobs/?h=sbatch#slurm-concepts" target="_blank" style="color: #82B1FF;">documentation</a>.
+  <br>Please see the <a href="https://riken-rccs.github.io/OpenComposer/docs/manual.html" target="_blank" style="color: #82B1FF;">Open Composer User Manual</a> for additional information.
+  <br>Required items(*)

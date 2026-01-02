@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="<%= @script_name %>/fontawesome-6.7.2/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <title>
+      <%= "#{@name} | Open Composer" %>
+    </title>
+    <style>
+      #<%= OC_SCRIPT_CONTENT %>, #<%= SUBMIT_CONTENT %> {
+        font-family: 'JetBrains Mono', monospace;
+      }
+      body {
+        min-width: 768px;
+      }
+      .ood-logo {
+        filter: invert(1) grayscale(100%);
+      }
+      a:hover .ood-logo {
+        filter: brightness(0) invert(1) grayscale(100%);
+      }
+
+      /* The timing of Bootstrap's navigation animation (which changes color when the mouse cursor is over it) differs
+         from the animation for the Open OnDemand image that you added, so turn off Bootstrap animations. */
+     .nav-link {
+       transition: none !important;
+     }
+     .nav-link:hover {
+       color: white !important;
+     }
+    </style>
+  </head>
+  
+  <body style="visibility: hidden;">
+    <div id="_form_container" class="container-fluid">
+      <nav class="navbar navbar-expand mx-1 navbar-dark bg-gradient" style="background:<%= @conf['navbar_color'] %>;">
+        <div class="container-fluid">
+          <div class="collapse navbar-collapse">
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a href="<%= @script_name %>/" class="nav-link <%= active?("" == @dir_name) %>">Home</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name) %>" data-bs-toggle="dropdown">
+                  Applications
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>;">
+                  <% @manifests_w_category.group_by(&:category).each do |category, manifests| %>
+                    <li class="dropdown-header"><%= category %></li>
+                    <% manifests.each do |m| %>
+                      <li>
+                        <a href="<%= @script_name %>/<%= m['dirname'] %>" class="dropdown-item <%= active?(m['dirname'] == @dir_name) %>">
+                          <%= m['name'] %>
+                        </a>
+                      </li>
+                    <% end %>
+                    <li><hr class="dropdown-divider"></li>
+                  <% end %>
+                  <% @manifests_wo_category.each do |m| %>
+                    <li>
+                      <a href="<%= @script_name %>/<%= m['dirname'] %>" class="dropdown-item <%= active?(m['dirname'] == @dir_name) %>">
+                        <%= m['name'] %>
+                      </a>
+                    </li>
+                  <% end %>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a href="<%= @script_name %>/history" class="nav-link <%= active?("history" == @dir_name) %>">History</a>
+              </li>
+            </ul>
+
+	          <ul class="navbar-nav ms-auto">
+	            <li class="nav-item">
+                <a target="_blank" href="<%= @my_ood_url %>/pun/sys/dashboard/files" class="nav-link py-0">
+                  <i class="fas fa-home fa-fw" style="font-size: 20px; display: inline-block; vertical-align: middle;" aria-hidden="true"></i>
+                  <span class="d-none d-lg-inline ms-1" style="display: inline-block; vertical-align: middle;">Home Directory</span>
+                </a>
+              </li>
+              <% unless @login_node.nil? %>
+                <% if @conf["login_node"].is_a?(Hash) && @conf["login_node"].values.compact.uniq.size > 1 %>
+                  <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle py-0" data-bs-toggle="dropdown">
+                      <i class="bi bi-terminal-fill" style="font-size: 20px; vertical-align: middle;"></i>
+                      <span class="d-none d-lg-inline ms-1" style="display: inline-block; vertical-align: middle;">Shell Access</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>; --bs-dropdown-min-width: 100%;">
+                      <% @conf["login_node"].each do |key, value| %>
+                        <li><a target="_blank" href="<%= @my_ood_url %>/pun/sys/shell/ssh/<%= value %>" class="dropdown-item"><%= key %></a></li>
+                      <% end %>
+                    </ul>
+                  </li>
+                <% else %>
+                  <li class="nav-item">
+                    <a target="_blank" href="<%= @my_ood_url %>/pun/sys/shell/ssh/<%= @login_node %>" class="nav-link py-0">
+                      <i class="bi bi-terminal-fill" style="font-size: 20px; display: inline-block; vertical-align: middle;" aria-hidden="true"></i>
+                      <span class="d-none d-lg-inline ms-1" style="display: inline-block; vertical-align: middle;">Shell Access</span>
+                    </a>
+                  </li>
+                <% end %>
+              <% end %>
+              <li class="nav-item">
+                <a target="_blank" href="<%= @my_ood_url %>" class="nav-link py-0">
+                  <img src="<%= @ood_logo_path %>" class="ood-logo" alt="OOD logo" style="height: 20px; display: inline-block; vertical-align: middle;">
+                  <span class="d-none d-lg-inline ms-1" style="vertical-align: middle;">Open OnDemand</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <%= yield %>
+
+      <footer class="footer py-1 bg-gradient mx-1 <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
+        <div class="row text-white align-items-center">
+          <div class="col text-start"></div> <!-- An empty column to center the middle text -->
+          <div class="col text-center"><%= @conf['footer'] %></div>
+          <div class="col text-end small mx-3">Open Composer version: <%= @version %></div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <!-- To prevent elements that are initially hidden from appearing for just a moment, make them visible after all loading is complete. -->
+    <script>
+      window.addEventListener('load', function() {
+        document.body.style.visibility = 'visible';
+      });
+    </script>
+  </body>
+</html>

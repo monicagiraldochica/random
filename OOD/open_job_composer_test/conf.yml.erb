@@ -1,0 +1,25 @@
+---
+# Required settings
+apps_dir: "./sample_apps"
+scheduler: "slurm"
+
+# Optional settings
+## General
+data_dir:  <%= ENV['HOME'] %>/composer_temp
+login_node: "login-hpc.rcc.mcw.edu"
+bin: "/opt/slurm/bin"
+bin_overrides:
+  sbatch:   "/opt/slurm/bin/sbatch"
+  scontrol: "/opt/slurm/bin/scontrol"
+  scancel:  "/opt/slurm/bin/scancel"
+  sacct:    "/opt/slurm/bin/sacct"
+
+## Layout
+footer:            "MCW Research Computing Center"
+thumbnail_width:   "100"
+navbar_color:      "#3D3B40"
+dropdown_color:    "#3D3B40"
+footer_color:      "#3D3B40"
+category_color:    "#224DBB"
+description_color: "#224DBB"
+form_color:        "#BFCFE7"

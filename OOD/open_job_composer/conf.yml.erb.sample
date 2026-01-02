@@ -1,0 +1,47 @@
+---
+# Required settings
+apps_dir: "./sample_apps"
+scheduler: "slurm"
+#clusters:
+#  fugaku:
+#    scheduler: "fujitsu_tcs"
+#  prepost:
+#    scheduler: "slurm"
+#    bin_overrides:
+#      sbatch: "/usr/local/bin/sbatch"
+
+# Optional settings
+## General
+#data_dir:  <%= ENV['HOME'] %>/composer
+#login_node: "example.com"
+#ssh_wrapper: "ssh hoge@example.com"
+#bin: "/usr/local/bin"
+#bin_overrides:
+#  sbatch:   "/usr/local/bin/sbatch"
+#  scontrol: "/usr/local/bin/scontrol"
+#  scancel:  "/usr/local/bin/scancel"
+#  sacct:    "/usr/local/bin/sacct"
+#  pjsub:    "/usr/local/bin/pjsub"
+#  pjstat:   "/usr/local/bin/pjstat"
+#  pjdel:    "/usr/local/bin/pjdel"
+#  qsub:     "/opt/pbs/bin/qsub"
+#  qstat:    "/usr/local/bin/qstat"
+#  qdel:     "/usr/local/bin/qdel"
+#  qacct:    "/usr/local/bin/qacct"
+#sge_root: "/apps/t4/rhel9/uge/latest"
+
+## History
+#history:
+#  OC_HISTORY_JOB_NAME:
+#  OC_HISTORY_PARTITION:
+#  OC_HISTORY_SUBMISSION_TIME:
+
+## Layout
+#footer:            "RIKEN Center for Computational Science"
+#thumbnail_width:   "100"
+#navbar_color:      "#3D3B40"
+#dropdown_color:    "#3D3B40"
+#footer_color:      "#3D3B40"
+#category_color:    "#5522BB"
+#description_color: "#5522BB"
+#form_color:        "#BFCFE7"

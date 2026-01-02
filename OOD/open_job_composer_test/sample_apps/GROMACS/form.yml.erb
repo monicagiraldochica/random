@@ -1,0 +1,36 @@
+<%
+  require '/var/www/ood/apps/sys/open_job_composer/sample_apps/utils.rb'
+
+  enable_threads = true
+  check_script_content = true
+  form, header, script, check, submit = fugaku_common("small", enable_threads, check_script_content)
+  
+  # spack versions gromacs -s
+  #versions = ["2024.2", "2024.1", "2024"]
+%>
+---
+form:
+<%= form %>
+<%# radio("gromacs", "GROMACS version", versions) %>
+<%# working_dir(true) %>
+<%= text("options", "Option (mdrun -deffnm poly-ch2)", nil, nil, true) %>
+
+header:
+<%= header %>
+
+script: |
+<%= script %>
+
+  # Load modules
+  . /vol0004/apps/oss/spack-v1.0.1/share/spack/setup-env.sh
+  spack load gromacs@2025.3
+
+  # Execute GROMACS
+  cd #{OC_SCRIPT_LOCATION}
+  mpiexec gmx_mpi #{:options}
+
+check: |
+<%= check %>
+
+submit: |
+<%= submit %>
