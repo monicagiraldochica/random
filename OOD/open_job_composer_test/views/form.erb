@@ -195,6 +195,14 @@ function rebuildWithSbatchHeader(currentText, headerText) {
     if (suffix) parts.push(suffix);
     return parts.join('\n\n').replace(/\n{3,}/g, '\n\n');
   }
+
+  // Case B: No #SBATCH lines — insert header near shebang or at the top
+  const hasShebang = lines.length>0 && lines[0].startsWith('#!');
+  if (hasShebang) {
+    const shebang = lines[0];
+    const rest = lines.slice(1).join('\n').trim();
+    return [shebang, header, rest].filter(s => s && s !== '').join('\n\n');
+  }
 }
 
 ocForm.isFirst = true;
