@@ -1,0 +1,7 @@
+---
+name: Phenix - PIgroup Lab
+category: Condo Apps
+subcategory: HPC Cluster
+role: batch_connect
+description: |
+  This app will launch Phenix App on the PIgroup condo server.

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+# Clean the environment
+module purge
+
+# Set working directory to home directory
+cd "${HOME}"
+
+# Load the required environment
+module load <%= context.modules %>
+# singularity only needed if desktop is containerized
+
+#
+# Launch Xfce Window Manager
+#
+
+(
+  unset XDG_RUNTIME_DIR
+  export SEND_256_COLORS_TO_REMOTE=1
+  export XDG_CONFIG_HOME="<%= session.staged_root.join("config") %>"
+  export XDG_DATA_HOME="<%= session.staged_root.join("share") %>"
+  export XDG_CACHE_HOME="$(mktemp -d)"
+  module restore
+  #set -x
+  eval $(dbus-launch --sh-syntax)
+  xfwm4 --compositor=off --sm-client-disable &
+  xsetroot -solid "#D3D3D3"
+  xfsettingsd --sm-client-disable --daemon
+  xfce4-panel --sm-client-disable
+) &
+
+# Launch Phenix
+module list
+phenix

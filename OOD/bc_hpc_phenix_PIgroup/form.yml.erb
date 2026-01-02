@@ -1,0 +1,51 @@
+---
+cluster: "hpc"
+
+form:
+  - modules
+  - account
+  - num_cores
+  - num_mem
+  - bc_num_hours
+  - bc_email_on_started
+  - email_time_warning
+
+attributes:
+  modules: "phenix/1.21.2"
+  account:
+    label: "SLURM Account"
+    required: true
+    <%- if SlurmAccounts.accounts.blank? -%>
+    widget: text_field
+    <%- else -%>
+    widget: select
+    options:
+      <%- SlurmAccounts.accounts.each do |a| -%>
+      - "<%= a.strip %>"
+      <%- end -%>
+    <%- end -%>
+  num_cores:
+    widget: "number_field"
+    label: "Number of cores"
+    help: |
+      Number of cores (min 1, max 32).
+    min: 1
+    max: 32
+    step: 1
+  num_mem:
+    widget: "number_field"
+    label: "Total memory in Gb"
+    help: |
+      Total amount of memory in Gb (min 4, max 492).
+    min: 4
+    max: 492
+    step: 1
+  bc_num_hours:
+    min: 1
+    max: 168
+    step: 1
+    help: |
+      Walltime in hours (min 1, max 168)  
+  email_time_warning:
+    widget: check_box
+    label: "I would like to receive an email when 90% of my time limit is consumed"
