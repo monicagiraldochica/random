@@ -167,6 +167,11 @@ document.addEventListener('keydown', function(event) {
 //    * If a shebang ("#!/") is present on the first line, the header is inserted right after it.
 //    * Otherwise, the header is inserted at the very top.
 function rebuildWithSbatchHeader(currentText, headerText) {
+  // ---- DEBUG: inputs ----
+  console.group('rebuildWithSbatchHeader');
+  console.log('INPUT currentText:', currentText);
+  console.log('INPUT headerText:', headerText);
+  // --- END DEBUG INPUTS ---
   const current = (currentText ?? '').toString();
   const header  = (headerText ?? '').toString();
   const lines   = current.split('\n');
@@ -174,10 +179,11 @@ function rebuildWithSbatchHeader(currentText, headerText) {
   // Find indices of all existing #SBATCH lines
   const sbatchIdxs = [];
   for (let i=0; i<lines.length; i++) {
-    if (lines[i].trim().startsWith('#SBATCH')) {
-      sbatchIdxs.push(i);
-    }
+    if (lines[i].trim().startsWith('#SBATCH')) sbatchIdxs.push(i);
   }
+  // ---- DEBUG: indexes ----
+  console.log('sbatchIdxs:', sbatchIdxs);
+  // --- END DEBUG INDEXES ---
 
   // Case A: Existing #SBATCH lines found — replace them with the new header
   if (sbatchIdxs.length > 0) {
@@ -187,13 +193,24 @@ function rebuildWithSbatchHeader(currentText, headerText) {
     // Body: every line EXCEPT those starting with #SBATCH (kept as-is and in original order
     const bodyLines = lines.filter(l => !l.trim().startsWith('#SBATCH'));
     // Remove the prefix portion from bodyLines to avoid duplication
-    const suffix = bodyLines.slice(prefix === '' ? 0 : prefix.split('\n').length).join('\n').replace(/^\n+/, '');
+    const prefixLineCount = prefix ? prefix.split('\n').length : 0;
+    const suffix = bodyLines.slice(prefixLineCount).join('\n').replace(/^\n+/, '');
+    // ---- DEBUG: computed parts ----
+    console.log('prefix:', prefix);
+    console.log('suffix:', suffix);
+    // --- END DEBUG COMP PARTS ---
 
     const parts = [];
     if (prefix) parts.push(prefix);
     parts.push(header);
     if (suffix) parts.push(suffix);
-    return parts.join('\n\n').replace(/\n{3,}/g, '\n\n');
+
+    // ---- DEBUG: result ----
+    const result = parts.join('\n\n').replace(/\n{3,}/g, '\n\n');
+    console.log('RESULT:', result);
+    console.groupEnd()
+    // --- END DEBUG RESULT ---
+    return result;
   }
 
   // Case B: No #SBATCH lines — insert header near shebang or at the top
@@ -224,16 +241,40 @@ ocForm.updateValues = function(fromId) {
     ocForm.updateSubmitContents(submitValues);
 
     // Overwrite of script textarea (first run)
-    ocForm.scriptArea.value = ocForm.isScriptCache() ? ocForm.loadScriptCache() : Object.values(scriptValues).join('\n');
+    //ocForm.scriptArea.value = ocForm.isScriptCache() ? ocForm.loadScriptCache() : Object.values(scriptValues).join('\n');
+    const newHeaderFirst = Object.values(scriptValues).join('\n');
+    const baseTextFirst = ocForm.isScriptCache() ? ocForm.loadScriptCache() : (ocForm.scriptArea.value || '');
+    // --- TEMP DEBUG LOGS (FIRST RUN) ---
+    console.group('updateValues:first-run');
+    console.log('isScriptCache', ocForm.isScriptCache());
+    console.log('loadScriptCache()', ocForm.isScriptCache() ? ocForm.loadScriptCache() : '(no cache)')
+    console.log('scriptValues (array)', scriptValues);
+    console.log('newHeaderFirst', Object.values(scriptValues).join('\n'));
+    console.log('scriptArea.value (BEFORE)', ocForm.scriptArea.value);
+    console.groupEnd();
+    // --- END DEBUG LINES ---
+    ocForm.scriptArea.value = rebuildWithSbatchHeader(baseTextFirst, newHeaderFirst);
+      
     // Overwrite of submit textarea (first run)
     ocForm.submitArea.value = ocForm.isSubmitCache() ? ocForm.loadSubmitCache() : Object.values(submitValues).join('\n');
   }
+
   else {
     ocForm.updateScriptContents(scriptValues);
     ocForm.updateSubmitContents(submitValues);
 
     // Overwrite of script textarea (subsequent runs)
-    ocForm.scriptArea.value = Object.values(scriptValues).join('\n');
+    //ocForm.scriptArea.value = Object.values(scriptValues).join('\n');
+    const newHeaderNext = Object.values(scriptValues).join('\n');
+    // --- TEMP DEBUG LOGS (SUBSEQUENT) ---
+    console.group('updateValues:subsequent');
+    console.log('scriptValues (array)', scriptValues);
+    console.log('newHeaderNext', Object.values(scriptValues).join('\n'));
+    console.log('scriptArea.value (BEFORE)', ocForm.scriptArea.value);
+    console.groupEnd();
+     // --- END DEBUG LINES ---
+    ocForm.scriptArea.value = rebuildWithSbatchHeader(ocForm.scriptArea.value || '', newHeaderNext);
+      
     // Overwrite of submit textarea (subsequent runs)
     ocForm.submitArea.value = Object.values(submitValues).join('\n')
   }
