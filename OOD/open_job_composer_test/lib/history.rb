@@ -39,7 +39,9 @@ helpers do
     <div class="modal" id="#{id}" aria-hidden="true" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
-          <div class="modal-body" id="#{id}Body"></div>
+          <div class="modal-body" id="#{id}Body">
+            (Something wrong)
+          </div>
           <div class="modal-footer">
             <form action="#{form_action}" method="post" id="#{id}Form">
               <input type="hidden" name="action" value="#{action}">
