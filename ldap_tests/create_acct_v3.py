@@ -12,14 +12,17 @@ import re
 
 def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber,reEnbl):
 	try:
-		dic = {f"/qumulo_homefs/{netID}/":[700,uidNumber,gidNumber],
+		# Define directories and permissions
+		dic = {
+			f"/qumulo_homefs/{netID}/":[700,uidNumber,gidNumber],
 			f"/group/{piID}/":[755,"root",f"sg-{piID}"],
 			f"/group/{piID}/work":[2770,"root",f"sg-{piID}"],
-			f"/scratch/g/{piID}":[2770,"root",f"sg-{piID}"]}
+			f"/scratch/g/{piID}":[2770,"root",f"sg-{piID}"]
+		}
 
 		print("\nCreating directories:")
 		for newdir,array in dic.items():
-			os.system(f"mkdir {newdir}")
+			os.system(f"mkdir -p {newdir}")
 			os.system(f"chmod {array[0]} {newdir}")
 			os.system(f"chown -R {array[1]}:{array[2]} {newdir}")
 			input(f"{newdir} successfully created [Enter]")
@@ -27,10 +30,17 @@ def createDirs(conn,netID,piID,isPI,uidNumber,gidNumber,reEnbl):
 			if not isPI:
 				break
 
+		# Populate skeleton files
 		if not reEnbl:
+			home_dir = list(dic.keys())[0]
+			perms = dic[home_dir]
+
 			for fname in [".bash_logout", ".bash_profile", ".bashrc", ".emacs"]:
-				shutil.copy(f"/adminfs/skel/{fname}",list(dic.keys())[0])
-			input(f"{list(dic.keys())[0]} successfully populated [Enter]")
+				shutil.copy(f"/adminfs/skel/{fname}", home_dir)
+				os.system(f"chmod {perms[0]} {home_dir}/{fname}")
+				os.system(f"chown {perms[1]}:{perms[2]} {home_dir}/{fname}")
+
+			input(f"{home_dir} successfully populated [Enter]")
 
 	except:
 		exitError(conn, "Could not create directories")
